@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domínio Auditar - Escrita Fiscal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_new.css') }}">
+</head>
+
+<body>
+    <div class="app-container">
+
+        <!-- TOP BAR -->
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <div class="app-title">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                    <span>Dominio Escrita Fiscal - Versão: 10.6A-05 - 01</span>
+                </div>
+            </div>
+
+            <nav class="main-menu">
+                <!-- CONTROLE MENU -->
+                <div class="menu-dropdown" onclick="toggleMenu(event, 'menu-controle')">
+                    <a href="#" class="menu-item active">Controle</a>
+                    <ul class="dropdown-menu" id="menu-controle">
+                        <li><a href="#" onclick="switchTab('dashboard')">Painel Geral</a></li>
+                        <li><a href="#" onclick="switchTab('empresas')">Empresas</a></li>
+                        <li class="divider"></li>
+                        <li><a href="#" onclick="showAlert('Empresa Centralizadora')">Empresa Centralizadora</a></li>
+                        <li><a href="#" onclick="showAlert('Perfis de Empresas')">Perfis de Empresas</a></li>
+                        <li class="divider"></li>
+                        <li><a href="#" onclick="showAlert('Parâmetros')">Parâmetros</a></li>
+                        <li><a href="#" onclick="showAlert('Trocar Usuário')">Trocar Usuário</a></li>
+                        <li><a href="{{ url_for('logout') }}">Sair</a></li>
+                    </ul>
+                </div>
+
+                <!-- ARQUIVOS MENU -->
+                <div class="menu-dropdown" onclick="toggleMenu(event, 'menu-arquivos')">
+                    <a href="#" class="menu-item">Arquivos</a>
+                    <ul class="dropdown-menu" id="menu-arquivos">
+                        <li><a href="#" onclick="showAlert('Fornecedores')">Fornecedores</a></li>
+                        <li><a href="#" onclick="showAlert('Clientes')">Clientes</a></li>
+                        <li><a href="#" onclick="showAlert('Remetentes')">Remetentes/Destinatários</a></li>
+                        <li class="divider"></li>
+                        <li><a href="#" onclick="showAlert('Produtos')">Produtos</a></li>
+                        <li><a href="#" onclick="showAlert('Grupos')">Grupos</a></li>
+                    </ul>
+                </div>
+
+                <!-- MOVIMENTOS MENU -->
+                <div class="menu-dropdown" onclick="toggleMenu(event, 'menu-movimentos')">
+                    <a href="#" class="menu-item">Movimentos</a>
+                    <ul class="dropdown-menu" id="menu-movimentos">
+                        <li><a href="#" onclick="switchTab('movimentos')">Notas Fiscais</a></li>
+                        <li><a href="#" onclick="showAlert('Lançamentos')">Lançamentos</a></li>
+                        <li><a href="#" onclick="showAlert('Importação')">Importação</a></li>
+                        <li class="divider"></li>
+                        <li><a href="#" onclick="showAlert('Ajustes')">Ajustes</a></li>
+                    </ul>
+                </div>
+
+                <!-- RELATÓRIOS MENU -->
+                <div class="menu-dropdown" onclick="toggleMenu(event, 'menu-relatorios')">
+                    <a href="#" class="menu-item">Relatórios</a>
+                    <ul class="dropdown-menu" id="menu-relatorios">
+                        <li><a href="#" onclick="switchTab('relatorios')">Análise Fiscal</a></li>
+                        <li><a href="#" onclick="showAlert('SPED')">SPED</a></li>
+                        <li><a href="#" onclick="showAlert('ECF')">ECF</a></li>
+                        <li class="divider"></li>
+                        <li><a href="#" onclick="showAlert('Tributos')">Tributos</a></li>
+                    </ul>
+                </div>
+
+                <!-- UTILITÁRIOS MENU -->
+                <div class="menu-dropdown" onclick="toggleMenu(event, 'menu-utilitarios')">
+                    <a href="#" class="menu-item">Utilitários</a>
+                    <ul class="dropdown-menu" id="menu-utilitarios">
+                        <li><a href="#" onclick="switchTab('utilitarios')">Ferramentas</a></li>
+                        <li><a href="#" onclick="showAlert('Calculadora')">Calculadora</a></li>
+                        <li><a href="#" onclick="showAlert('Backup')">Backup</a></li>
+                        <li class="divider"></li>
+                        <li><a href="#" onclick="showAlert('Sincronização')">Sincronização</a></li>
+                    </ul>
+                </div>
+
+                <!-- FAVORITOS -->
+                <a href="#" class="menu-item" onclick="switchTab('favoritos')">Favoritos</a>
+
+                <!-- AJUDA -->
+                <a href="#" class="menu-item" onclick="switchTab('ajuda')">Ajuda</a>
+            </nav>
+
+            <div class="top-bar-right">
+                <div class="user-info">
+                    <span class="username">ARTURMN</span>
+                    <span class="company">LICING COMERCIO LTDA - 55</span>
+                    <span class="date">MAI/2026</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT AREA -->
+        <div class="main-content-wrapper">
+
+            <!-- LEFT SIDEBAR -->
+            <aside class="sidebar-left">
+                <div class="logo-section">
+                    <div class="logo">DOMINIO</div>
+                </div>
+                <nav class="icon-menu">
+                    <button class="icon-btn" title="Painel" onclick="switchTab('dashboard')"><i
+                            class="fa-solid fa-building"></i></button>
+                    <button class="icon-btn" title="Documentos"><i class="fa-solid fa-file-contract"></i></button>
+                    <button class="icon-btn" title="Movimentos"><i class="fa-solid fa-arrows-alt"></i></button>
+                    <button class="icon-btn" title="Relatórios"><i class="fa-solid fa-chart-bar"></i></button>
+                    <button class="icon-btn" title="Buscar"><i class="fa-solid fa-search"></i></button>
+                    <button class="icon-btn" title="Gerenciador"><i class="fa-solid fa-folder-open"></i></button>
+                    <button class="icon-btn" title="Utilitários"><i class="fa-solid fa-toolbox"></i></button>
+                    <button class="icon-btn" title="Sync"><i class="fa-solid fa-sync"></i></button>
+                    <button class="icon-btn" title="Calculadora"><i class="fa-solid fa-calculator"></i></button>
+                    <button class="icon-btn" title="Gráficos"><i class="fa-solid fa-chart-pie"></i></button>
+                    <button class="icon-btn" title="Livro"><i class="fa-solid fa-book"></i></button>
+                </nav>
+            </aside>
+
+            <!-- CENTER CONTENT -->
+            <main class="main-content">
+                <div class="content-area" id="dashboard-content">
+                    <!-- Conteúdo será carregado aqui -->
+                </div>
+            </main>
+
+            <!-- RIGHT SIDEBAR -->
+            <aside class="sidebar-right">
+                <nav class="icon-menu-right">
+                    <button class="icon-btn" title="Configurações"><i class="fa-solid fa-gear"></i></button>
+                    <button class="icon-btn" title="Cloud"><i class="fa-solid fa-cloud"></i></button>
+                    <button class="icon-btn" title="Play"><i class="fa-solid fa-play"></i></button>
+                    <button class="icon-btn" title="Backup"><i class="fa-solid fa-bag"></i></button>
+                    <button class="icon-btn" title="Áudio"><i class="fa-solid fa-headphones"></i></button>
+                    <button class="icon-btn" title="Notificações"><i class="fa-solid fa-bell"></i></button>
+                    <button class="icon-btn" title="Chat"><i class="fa-solid fa-comments"></i></button>
+                </nav>
+            </aside>
+        </div>
+
+        <!-- BOTTOM TAB BAR -->
+        <footer class="bottom-tabs">
+            <div class="tab-item active" onclick="switchTab('envio')">
+                <i class="fa-solid fa-envelope"></i>
+                <span>Envio</span>
+            </div>
+            <div class="tab-item" onclick="switchTab('suporte')">
+                <i class="fa-solid fa-headset"></i>
+                <span>Suporte</span>
+            </div>
+            <div class="tab-item" onclick="switchTab('esocial')">
+                <i class="fa-solid fa-file-pdf"></i>
+                <span>eSocial</span>
+            </div>
+            <div class="tab-item" onclick="switchTab('onbalance')">
+                <i class="fa-solid fa-file-excel"></i>
+                <span>OnBalance</span>
+            </div>
+            <div class="tab-item" onclick="switchTab('docs')">
+                <i class="fa-solid fa-file-invoice"></i>
+                <span>Docs Fiscais</span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app_new.js') }}"></script>
+</body>
+
+</html>

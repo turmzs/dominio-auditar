@@ -1,0 +1,337 @@
+/* ============================================
+   CASCADE MENU LAYOUT - DOMINIO ESCRITA FISCAL
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --teal-darkest: #0d3a3a;
+    --teal-dark: #155e5e;
+    --teal-brand: #1a7171;
+    --teal-light: #2fa3a3;
+    --text-light: #e8f0f0;
+    --text-muted: #a8bfbf;
+    --bg-dark: #0d3a3a;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg-dark);
+    color: var(--text-light);
+    overflow: hidden;
+}
+
+/* ===== APP CONTAINER ===== */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+
+/* ===== TOP BAR ===== */
+.top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 50px;
+    background: linear-gradient(135deg, var(--teal-darkest) 0%, var(--teal-dark) 100%);
+    border-bottom: 1px solid var(--teal-brand);
+    padding: 0 20px;
+    flex-shrink: 0;
+    gap: 20px;
+}
+
+.app-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-light);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.app-title i {
+    font-size: 16px;
+    color: #e91e63;
+}
+
+/* ===== MAIN MENU (CASCADE) ===== */
+.main-menu {
+    display: flex;
+    gap: 5px;
+    flex: 1;
+    position: relative;
+}
+
+.menu-dropdown {
+    position: relative;
+}
+
+.menu-item {
+    display: block;
+    padding: 10px 15px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+}
+
+.menu-item:hover {
+    color: var(--text-light);
+    border-bottom-color: #e91e63;
+}
+
+.menu-item.has-submenu::after {
+    content: ' ▼';
+    font-size: 9px;
+}
+
+/* DROPDOWN MENUS */
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--teal-darkest);
+    border: 1px solid var(--teal-brand);
+    border-radius: 4px;
+    list-style: none;
+    min-width: 200px;
+    display: none;
+    z-index: 1000;
+    margin-top: 5px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-menu.show {
+    display: block;
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-menu li {
+    border-bottom: 1px solid rgba(26, 113, 113, 0.3);
+}
+
+.dropdown-menu li:last-child {
+    border-bottom: none;
+}
+
+.dropdown-menu a,
+.dropdown-menu .menu-item {
+    display: block;
+    padding: 10px 15px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 11px;
+    transition: all 0.2s;
+    border: none;
+    border-left: 3px solid transparent;
+    font-weight: 400;
+    width: 100%;
+    text-align: left;
+}
+
+.dropdown-menu a:hover,
+.dropdown-menu .menu-item:hover {
+    background: var(--teal-brand);
+    color: var(--text-light);
+    border-left-color: #e91e63;
+    padding-left: 20px;
+}
+
+/* NESTED SUBMENUS */
+.submenu-wrapper {
+    position: relative;
+}
+
+.submenu {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    background: var(--teal-darkest);
+    border: 1px solid var(--teal-brand);
+    border-radius: 4px;
+    list-style: none;
+    min-width: 180px;
+    margin-left: 5px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.submenu.show {
+    display: block;
+    animation: slideRight 0.2s ease;
+}
+
+@keyframes slideRight {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.submenu li {
+    border-bottom: 1px solid rgba(26, 113, 113, 0.3);
+}
+
+.submenu li:last-child {
+    border-bottom: none;
+}
+
+.submenu a {
+    display: block;
+    padding: 8px 12px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 10px;
+    border: none;
+    border-left: 3px solid transparent;
+}
+
+.submenu a:hover {
+    background: var(--teal-brand);
+    color: var(--text-light);
+    border-left-color: #e91e63;
+    padding-left: 15px;
+}
+
+/* ===== TOP BAR RIGHT ===== */
+.top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    font-size: 11px;
+    text-align: right;
+}
+
+.username {
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.company {
+    color: var(--text-muted);
+    font-size: 10px;
+}
+
+.date {
+    color: var(--text-muted);
+    font-size: 10px;
+}
+
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: 1px solid var(--teal-light);
+    color: var(--text-light);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    background: var(--teal-light);
+    color: white;
+}
+
+/* ===== MAIN WRAPPER ===== */
+.main-wrapper {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* ===== CONTENT AREA ===== */
+.content-area {
+    flex: 1;
+    background: linear-gradient(135deg, #0d3a3a 0%, #0f4a4a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+}
+
+.content-panel {
+    width: 100%;
+    height: 100%;
+    padding: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.welcome-message {
+    text-align: center;
+}
+
+.welcome-message h1 {
+    font-size: 36px;
+    color: var(--text-light);
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.welcome-message p {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--teal-darkest);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--teal-brand);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--teal-light);
+}

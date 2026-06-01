@@ -1,0 +1,502 @@
+/* ============================================
+   DOMINIO AUDITAR - CORPORATE FISCAL SYSTEM
+   WinForms/WPF Style Desktop Application
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --color-primary: #0066cc;
+    --color-primary-dark: #004499;
+    --color-border: #c0c0c0;
+    --color-border-light: #e0e0e0;
+    --color-bg: #f5f5f5;
+    --color-bg-dark: #ffffff;
+    --color-text: #000000;
+    --color-text-secondary: #666666;
+    --color-hover: #e8f0ff;
+    --color-selected: #0066cc;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --spacing-xs: 2px;
+    --spacing-sm: 4px;
+    --spacing-md: 8px;
+    --spacing-lg: 12px;
+    --spacing-xl: 16px;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    font-family: var(--font-family);
+    background: var(--color-bg);
+    color: var(--color-text);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* ===== APP FRAME ===== */
+.app-frame {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+
+/* ===== HEADER BAR ===== */
+.header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 40px;
+    background: linear-gradient(to right, #f0f0f0 0%, #ffffff 100%);
+    border-bottom: 1px solid var(--color-border);
+    padding: 0 var(--spacing-md);
+    gap: var(--spacing-lg);
+    flex-shrink: 0;
+}
+
+.header-logo {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-weight: 700;
+    color: var(--color-primary);
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.header-logo i {
+    font-size: 16px;
+}
+
+.header-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex: 1;
+    font-size: 12px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    white-space: nowrap;
+}
+
+.info-item label {
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.header-select,
+.header-input {
+    border: 1px solid var(--color-border);
+    padding: 4px 6px;
+    font-size: 11px;
+    font-family: var(--font-family);
+    background: white;
+    color: var(--color-text);
+}
+
+.header-select:focus,
+.header-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: inset 0 0 2px rgba(0, 102, 204, 0.2);
+}
+
+.divider {
+    width: 1px;
+    height: 20px;
+    background: var(--color-border);
+}
+
+.header-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.btn-icon {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--color-border);
+    background: linear-gradient(to bottom, #f9f9f9, #f0f0f0);
+    color: var(--color-text);
+    cursor: pointer;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    transition: all 0.15s;
+}
+
+.btn-icon:hover {
+    background: linear-gradient(to bottom, #ffffff, #f5f5f5);
+    border-color: var(--color-primary);
+}
+
+.btn-icon:active {
+    background: linear-gradient(to bottom, #e8f0ff, #e0e8ff);
+}
+
+/* ===== MAIN CONTAINER ===== */
+.main-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+    width: 200px;
+    background: linear-gradient(to bottom, #f8f8f8, #f0f0f0);
+    border-right: 1px solid var(--color-border);
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.sidebar-nav {
+    padding: var(--spacing-md);
+}
+
+.nav-group {
+    margin-bottom: var(--spacing-md);
+}
+
+.nav-group-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: 6px var(--spacing-md);
+    color: var(--color-text);
+    text-decoration: none;
+    font-size: 12px;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+    cursor: pointer;
+}
+
+.nav-item:hover {
+    background: var(--color-hover);
+    color: var(--color-primary);
+}
+
+.nav-item.active {
+    background: var(--color-hover);
+    border-left-color: var(--color-primary);
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.nav-item i {
+    width: 16px;
+    text-align: center;
+}
+
+/* ===== CONTENT AREA ===== */
+.content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--color-bg-dark);
+}
+
+.module-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ===== FILTER BAR ===== */
+.filter-bar {
+    display: flex;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg);
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.filter-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.filter-input,
+.filter-select {
+    border: 1px solid var(--color-border);
+    padding: 4px 6px;
+    font-size: 11px;
+    font-family: var(--font-family);
+    background: white;
+    color: var(--color-text);
+    border-radius: 2px;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: inset 0 0 2px rgba(0, 102, 204, 0.2);
+}
+
+/* ===== TOOLBAR ===== */
+.toolbar {
+    display: flex;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: linear-gradient(to bottom, #f8f8f8, #f0f0f0);
+    border-bottom: 1px solid var(--color-border);
+    flex-wrap: wrap;
+}
+
+.btn-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border: 1px solid var(--color-border);
+    background: linear-gradient(to bottom, #ffffff, #f5f5f5);
+    color: var(--color-text);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.btn-toolbar:hover {
+    background: linear-gradient(to bottom, #ffffff, #f0f0f0);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.btn-toolbar:active {
+    background: linear-gradient(to bottom, #e8f0ff, #e0e8ff);
+}
+
+.btn-toolbar i {
+    font-size: 12px;
+}
+
+/* ===== GRID AREA ===== */
+.grid-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.grid-wrapper {
+    flex: 1;
+    overflow: auto;
+    border: 1px solid var(--color-border);
+    margin: 0 var(--spacing-md) var(--spacing-md) var(--spacing-md);
+}
+
+.data-grid {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    font-size: 11px;
+}
+
+.data-grid thead {
+    background: linear-gradient(to bottom, #f8f8f8, #f0f0f0);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.data-grid th {
+    padding: 4px 6px;
+    border: 1px solid var(--color-border);
+    text-align: left;
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+    user-select: none;
+    cursor: pointer;
+    background: linear-gradient(to bottom, #f9f9f9, #f0f0f0);
+}
+
+.data-grid th:hover {
+    background: linear-gradient(to bottom, #ffffff, #f5f5f5);
+}
+
+.data-grid tbody tr {
+    border-bottom: 1px solid var(--color-border-light);
+    height: 20px;
+}
+
+.data-grid tbody tr:hover {
+    background: var(--color-hover);
+}
+
+.data-grid tbody tr.selected {
+    background: var(--color-selected);
+    color: white;
+}
+
+.data-grid tbody tr.selected td {
+    background: inherit;
+    color: inherit;
+}
+
+.data-grid td {
+    padding: 2px 6px;
+    border-right: 1px solid var(--color-border-light);
+    height: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+}
+
+.data-grid td:last-child {
+    border-right: none;
+}
+
+/* ===== BOTTOM PANEL ===== */
+.bottom-panel {
+    height: 200px;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+}
+
+.tab-bar {
+    display: flex;
+    gap: 0;
+    background: linear-gradient(to bottom, #f9f9f9, #f0f0f0);
+    border-bottom: 1px solid var(--color-border);
+    padding-left: var(--spacing-md);
+}
+
+.tab {
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-bottom: none;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    transition: all 0.15s;
+    margin-right: 2px;
+}
+
+.tab:hover {
+    color: var(--color-text);
+    background: var(--color-hover);
+}
+
+.tab.active {
+    background: white;
+    color: var(--color-primary);
+    border-color: var(--color-border);
+    border-bottom: 1px solid white;
+    margin-bottom: -1px;
+}
+
+.tab-content {
+    flex: 1;
+    overflow: auto;
+    padding: var(--spacing-md);
+    background: white;
+}
+
+.tab-content.hidden {
+    display: none;
+}
+
+/* ===== GRID LAYOUT FOR DETAIL TABS ===== */
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--spacing-md);
+    font-size: 11px;
+}
+
+.detail-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.detail-value {
+    color: var(--color-text);
+    font-family: 'Courier New', monospace;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border: 2px solid var(--color-bg);
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-secondary);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1200px) {
+    .sidebar {
+        width: 170px;
+    }
+
+    .data-grid {
+        font-size: 10px;
+    }
+
+    .data-grid th,
+    .data-grid td {
+        padding: 2px 4px;
+    }
+}

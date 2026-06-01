@@ -14,9 +14,23 @@ function initApp() {
     // Set default values in Period dropdowns
     document.getElementById("select-mes").value = currentMonth;
     document.getElementById("select-ano").value = currentYear;
-    
+
     // Load companies
     loadEmpresas();
+
+    // Toolbar hidden by default (utilities appear on demand)
+    setToolbarVisibility(false);
+}
+
+// Control visibility of the top utility toolbar (icons on demand)
+function setToolbarVisibility(visible) {
+    const toolbar = document.querySelector('.action-toolbar');
+    if (!toolbar) return;
+    if (visible) {
+        toolbar.classList.add('visible');
+    } else {
+        toolbar.classList.remove('visible');
+    }
 }
 
 // Tab Switching
@@ -40,7 +54,11 @@ function switchTab(tabId) {
     } else if (tabId === "empresas") {
         loadEmpresasTab();
     }
-    
+
+    // Show toolbar utilities only for specific tabs
+    const tabs_showing_toolbar = ['notas','empresas','apuracao'];
+    setToolbarVisibility(tabs_showing_toolbar.includes(tabId));
+
     // Update simulated desktop status
     updateDesktopStatus(tabId);
 }
@@ -49,12 +67,12 @@ function switchTab(tabId) {
 function onEmpresaChanged() {
     const selector = document.getElementById("select-empresa");
     currentCompanyId = selector.value ? parseInt(selector.value) : null;
-    
+
     // Save to localStorage
     if (currentCompanyId) {
         localStorage.setItem("active_company_id", currentCompanyId);
     }
-    
+
     updateDesktopStatus();
     refreshCurrentTab();
 }
@@ -62,7 +80,7 @@ function onEmpresaChanged() {
 function onPeriodChanged() {
     currentMonth = parseInt(document.getElementById("select-mes").value);
     currentYear = parseInt(document.getElementById("select-ano").value);
-    
+
     updateDesktopStatus();
     refreshCurrentTab();
 }
@@ -71,7 +89,7 @@ function refreshCurrentTab() {
     // Identify which tab is currently active
     const activeTab = document.querySelector(".nav-item.active");
     if (!activeTab) return;
-    
+
     const tabId = activeTab.id.replace("btn-tab-", "");
     switchTab(tabId);
 }
@@ -87,7 +105,7 @@ function updateDesktopStatus(tabId) {
             companyPill.textContent = "Sem Empresa Ativa";
         }
     }
-    
+
     const selectMes = document.getElementById("select-mes");
     const selectAno = document.getElementById("select-ano");
     const periodPill = document.getElementById("active-period-pill");
@@ -96,24 +114,24 @@ function updateDesktopStatus(tabId) {
         const anoStr = selectAno.value;
         periodPill.textContent = `Competência: ${mesStr}/${anoStr}`;
     }
-    
+
     const windowTitle = document.getElementById("active-window-title");
     if (windowTitle) {
         let title = "Painel Geral - Resumo Fiscal";
         const currentTab = tabId || (document.querySelector(".nav-item.active") ? document.querySelector(".nav-item.active").id.replace("btn-tab-", "") : "dashboard");
-        
+
         if (currentTab === "dashboard") title = "Painel Geral - Resumo Fiscal";
         else if (currentTab === "notas") title = "Movimentos - Escrituração (XML)";
         else if (currentTab === "apuracao") title = "Relatórios - Apuração & DRE";
         else if (currentTab === "empresas") title = "Arquivos - Cadastro de Empresas";
-        
+
         windowTitle.innerHTML = `<i class="fa-solid fa-folder-open text-gold"></i> ${title}`;
     }
 
     // Marca botão ativo na barra de ferramentas
     document.querySelectorAll(".toolbar-btn").forEach(btn => btn.classList.remove("active-btn"));
     const activeTabId = tabId || (document.querySelector(".nav-item.active") ? document.querySelector(".nav-item.active").id.replace("btn-tab-", "") : "dashboard");
-    
+
     // Tratamento para Entradas/Saídas que são subset da aba 'notas'
     let toolbarTargetId = `toolbar-btn-${activeTabId}`;
     const activeToolbarBtn = document.getElementById(toolbarTargetId);
@@ -130,14 +148,14 @@ function loadEmpresas() {
         .then(data => {
             const dropdown = document.getElementById("select-empresa");
             dropdown.innerHTML = "";
-            
+
             if (data.length === 0) {
                 dropdown.innerHTML = `<option value="">Nenhuma Empresa Cadastrada</option>`;
                 currentCompanyId = null;
                 switchTab("empresas");
                 return;
             }
-            
+
             data.forEach(emp => {
                 const opt = document.createElement("option");
                 opt.value = emp.id;
@@ -150,7 +168,7 @@ function loadEmpresas() {
             if (cachedId && data.some(emp => emp.id == cachedId)) {
                 dropdown.value = cachedId;
             }
-            
+
             currentCompanyId = parseInt(dropdown.value);
             refreshCurrentTab();
         })
@@ -163,22 +181,22 @@ function loadEmpresasTab() {
         .then(data => {
             const container = document.getElementById("empresas-cards-container");
             container.innerHTML = "";
-            
+
             if (data.length === 0) {
                 container.innerHTML = `<div class="alert-info-box"><i class="fa-solid fa-building"></i><p>Nenhuma empresa cadastrada. Use o formulário acima para registrar sua primeira empresa.</p></div>`;
                 return;
             }
-            
+
             data.forEach(emp => {
                 const isActive = emp.id === currentCompanyId;
                 const card = document.createElement("div");
                 card.className = `empresa-card glass ${isActive ? 'active-card' : ''}`;
-                
+
                 let regimeLabel = "";
                 if (emp.regime === "simples") regimeLabel = "Simples Nacional";
                 else if (emp.regime === "presumido") regimeLabel = "Lucro Presumido";
                 else if (emp.regime === "real") regimeLabel = "Lucro Real";
-                
+
                 let atividadeLabel = "";
                 if (emp.atividade === "servicos") atividadeLabel = "Serviços";
                 else if (emp.atividade === "comercio") atividadeLabel = "Comércio";
@@ -208,7 +226,7 @@ function toggleFormRegimeDetails() {
     const regime = document.getElementById("empresa-regime").value;
     const payrollGroup = document.getElementById("payroll-group");
     const activity = document.getElementById("empresa-atividade").value;
-    
+
     if (regime === "simples" && activity === "fator_r") {
         payrollGroup.style.display = "flex";
     } else {
@@ -221,7 +239,7 @@ document.getElementById("empresa-atividade").addEventListener("change", toggleFo
 
 function saveEmpresa(event) {
     event.preventDefault();
-    
+
     const id = document.getElementById("empresa-id").value;
     const nome = document.getElementById("empresa-nome").value;
     const cnpj = document.getElementById("empresa-cnpj").value;
@@ -237,13 +255,13 @@ function saveEmpresa(event) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
     })
-    .then(res => res.json())
-    .then(data => {
-        clearEmpresaForm();
-        loadEmpresas();
-        loadEmpresasTab();
-    })
-    .catch(err => console.error("Erro ao salvar empresa:", err));
+        .then(res => res.json())
+        .then(data => {
+            clearEmpresaForm();
+            loadEmpresas();
+            loadEmpresasTab();
+        })
+        .catch(err => console.error("Erro ao salvar empresa:", err));
 }
 
 function editEmpresa(emp) {
@@ -254,14 +272,14 @@ function editEmpresa(emp) {
     document.getElementById("empresa-atividade").value = emp.atividade;
     document.getElementById("empresa-faturamento-anual").value = emp.faturamento_anual;
     document.getElementById("empresa-folha-anual").value = emp.folha_anual;
-    
+
     document.getElementById("empresa-form-title").innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Editar Empresa`;
     toggleFormRegimeDetails();
 }
 
 function deleteEmpresa(id) {
     if (!confirm("Tem certeza que deseja excluir esta empresa e todos os seus lançamentos fiscais?")) return;
-    
+
     fetch(`/api/empresas/${id}`, { method: "DELETE" })
         .then(() => {
             loadEmpresas();
@@ -298,7 +316,7 @@ function loadDashboardData() {
             if (data.regime_tipo === "simples") {
                 progressBox.classList.remove("display-none");
                 document.getElementById("simples-progress-faturamento-anual").textContent = `Faturamento Acumulado (12m): R$ ${formatMoeda(data.faturamento_anual)}`;
-                
+
                 // R$ 3.6M sublimite
                 const subPercent = Math.min(100, (data.faturamento_anual / 3600000) * 100);
                 document.getElementById("sublimite-progress").style.width = `${subPercent}%`;
@@ -315,7 +333,7 @@ function loadDashboardData() {
             // Alerts Panel
             const alertsContainer = document.getElementById("alerts-container");
             alertsContainer.innerHTML = "";
-            
+
             if (data.alertas.length === 0) {
                 alertsContainer.innerHTML = `
                     <div class="alert-info-box">
@@ -330,11 +348,11 @@ function loadDashboardData() {
                 data.alertas.forEach(alert => {
                     const alertDiv = document.createElement("div");
                     alertDiv.className = `alert-box ${alert.tipo}`; // info, warning, danger
-                    
+
                     let iconClass = "fa-solid fa-circle-info text-info";
                     if (alert.tipo === "warning") iconClass = "fa-solid fa-triangle-exclamation text-warning";
                     if (alert.tipo === "danger") iconClass = "fa-solid fa-circle-xmark text-danger";
-                    
+
                     alertDiv.innerHTML = `
                         <i class="${iconClass}"></i>
                         <div>
@@ -357,7 +375,7 @@ function loadDashboardData() {
 
 function renderRegimesChart(chartData) {
     const ctx = document.getElementById("chart-regimes").getContext("2d");
-    
+
     // Destroy previous instance
     if (regimesChart) {
         regimesChart.destroy();
@@ -398,7 +416,7 @@ function renderRegimesChart(chartData) {
                     borderColor: 'rgba(255, 255, 255, 0.08)',
                     borderWidth: 1,
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             return ` R$ ${formatMoeda(context.parsed.y)}`;
                         }
                     }
@@ -411,10 +429,10 @@ function renderRegimesChart(chartData) {
                 },
                 y: {
                     grid: { color: 'rgba(255, 255, 255, 0.04)' },
-                    ticks: { 
-                        color: '#94a3b8', 
+                    ticks: {
+                        color: '#94a3b8',
                         font: { family: 'Plus Jakarta Sans' },
-                        callback: function(value) {
+                        callback: function (value) {
                             return 'R$ ' + formatMoeda(value);
                         }
                     }
@@ -524,7 +542,7 @@ function setupXMLDropzone() {
     const fileInput = document.getElementById("file-input");
 
     dropzone.addEventListener("click", () => fileInput.click());
-    
+
     fileInput.addEventListener("change", (e) => {
         handleXMLFiles(e.target.files);
     });
@@ -578,7 +596,7 @@ function handleXMLFiles(files) {
         const reader = new FileReader();
         reader.onload = (e) => {
             const xmlContent = e.target.result;
-            
+
             document.getElementById(`prog-fill-${index}`).style.width = "40%";
             document.getElementById(`prog-val-${index}`).textContent = "Processando XML...";
 
@@ -592,37 +610,37 @@ function handleXMLFiles(files) {
                     xml_content: xmlContent
                 })
             })
-            .then(res => res.json())
-            .then(result => {
-                const fill = document.getElementById(`prog-fill-${index}`);
-                const status = document.getElementById(`prog-val-${index}`);
-                
-                if (result.success) {
-                    fill.style.width = "100%";
-                    fill.style.background = "var(--accent-green)";
-                    status.innerHTML = `<span class="text-success"><i class="fa-solid fa-circle-check"></i> Importado (Nota #${result.nota_numero})</span>`;
-                } else {
+                .then(res => res.json())
+                .then(result => {
+                    const fill = document.getElementById(`prog-fill-${index}`);
+                    const status = document.getElementById(`prog-val-${index}`);
+
+                    if (result.success) {
+                        fill.style.width = "100%";
+                        fill.style.background = "var(--accent-green)";
+                        status.innerHTML = `<span class="text-success"><i class="fa-solid fa-circle-check"></i> Importado (Nota #${result.nota_numero})</span>`;
+                    } else {
+                        fill.style.width = "100%";
+                        fill.style.background = "var(--accent-red)";
+                        status.innerHTML = `<span class="text-danger" title="${result.message}"><i class="fa-solid fa-circle-xmark"></i> Erro: Duplicada/Inválida</span>`;
+                    }
+                })
+                .catch(err => {
+                    const fill = document.getElementById(`prog-fill-${index}`);
+                    const status = document.getElementById(`prog-val-${index}`);
                     fill.style.width = "100%";
                     fill.style.background = "var(--accent-red)";
-                    status.innerHTML = `<span class="text-danger" title="${result.message}"><i class="fa-solid fa-circle-xmark"></i> Erro: Duplicada/Inválida</span>`;
-                }
-            })
-            .catch(err => {
-                const fill = document.getElementById(`prog-fill-${index}`);
-                const status = document.getElementById(`prog-val-${index}`);
-                fill.style.width = "100%";
-                fill.style.background = "var(--accent-red)";
-                status.innerHTML = `<span class="text-danger"><i class="fa-solid fa-circle-xmark"></i> Falha na Conexão</span>`;
-            })
-            .finally(() => {
-                uploadsCompleted++;
-                if (uploadsCompleted === xmlFiles.length) {
-                    setTimeout(() => {
-                        progressContainer.style.display = "none";
-                        loadInvoices();
-                    }, 4000);
-                }
-            });
+                    status.innerHTML = `<span class="text-danger"><i class="fa-solid fa-circle-xmark"></i> Falha na Conexão</span>`;
+                })
+                .finally(() => {
+                    uploadsCompleted++;
+                    if (uploadsCompleted === xmlFiles.length) {
+                        setTimeout(() => {
+                            progressContainer.style.display = "none";
+                            loadInvoices();
+                        }, 4000);
+                    }
+                });
         };
         reader.readAsText(file);
     });
@@ -631,11 +649,11 @@ function handleXMLFiles(files) {
 // Manual Invoice Modal Actions
 function openManualInvoiceModal() {
     document.getElementById("form-invoice").reset();
-    
+
     // Set default date to active period
     const defaultDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
     document.getElementById("invoice-data").value = defaultDate;
-    
+
     document.getElementById("modal-invoice").classList.add("active");
 }
 
@@ -672,12 +690,12 @@ function saveManualInvoice(event) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
     })
-    .then(res => res.json())
-    .then(data => {
-        closeManualInvoiceModal();
-        loadInvoices();
-    })
-    .catch(err => console.error("Erro ao salvar nota manual:", err));
+        .then(res => res.json())
+        .then(data => {
+            closeManualInvoiceModal();
+            loadInvoices();
+        })
+        .catch(err => console.error("Erro ao salvar nota manual:", err));
 }
 
 // ==========================================
@@ -689,7 +707,7 @@ function loadApuracaoDetails() {
 
     const dreWrapper = document.getElementById("dre-wrapper");
     const memWrapper = document.getElementById("calc-memoria-wrapper");
-    
+
     dreWrapper.innerHTML = `<div class="alert-info-box"><i class="fa-solid fa-spinner fa-spin text-info"></i><p>Calculando apuração tributária...</p></div>`;
     memWrapper.innerHTML = "";
 
@@ -716,20 +734,20 @@ function loadApuracaoDetails() {
                 data.memoria.forEach(item => {
                     const card = document.createElement("div");
                     card.className = "memoria-card";
-                    
+
                     let detailsListHtml = "";
                     if (item.detalhamento && Object.keys(item.detalhamento).length > 0) {
                         detailsListHtml = `<div class="mem-details"><ul>`;
                         for (const [key, value] of Object.entries(item.detalhamento)) {
                             const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                            
+
                             let formattedValue = value;
                             if (typeof value === "number" && !key.toLowerCase().includes("faixa") && !key.toLowerCase().includes("aliquota") && !key.toLowerCase().includes("fator")) {
                                 formattedValue = `R$ ${formatMoeda(value)}`;
                             } else if (typeof value === "number") {
                                 formattedValue = value.toFixed(2);
                             }
-                            
+
                             detailsListHtml += `<li><strong>${formattedKey}:</strong> ${formattedValue}</li>`;
                         }
                         detailsListHtml += `</ul></div>`;
@@ -775,7 +793,7 @@ function loadApuracaoDetails() {
 function toggleAccordion(header) {
     const body = header.nextElementSibling;
     const icon = header.querySelector("i");
-    
+
     if (body.style.display === "none") {
         body.style.display = "flex";
         icon.className = "fa-solid fa-chevron-up text-muted";
@@ -796,11 +814,11 @@ function formatMoeda(val) {
 
 function applyCNPJMask(input) {
     let value = input.value.replace(/\D/g, "");
-    
+
     if (value.length > 14) {
         value = value.substring(0, 14);
     }
-    
+
     if (value.length > 12) {
         input.value = `${value.substring(0, 2)}.${value.substring(2, 5)}.${value.substring(5, 8)}/${value.substring(8, 12)}-${value.substring(12)}`;
     } else if (value.length > 8) {

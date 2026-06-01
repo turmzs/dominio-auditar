@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dominio Auditar - Sistema Fiscal Profissional</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/corporate.css') }}">
+</head>
+
+<body>
+    <div class="app-frame">
+        <!-- TOP BAR -->
+        <header class="header-bar">
+            <div class="header-logo">
+                <i class="fas fa-building"></i>
+                <span>Dominio Auditar</span>
+            </div>
+            <div class="header-info">
+                <div class="info-item">
+                    <label>Empresa:</label>
+                    <select id="empresa-select" class="header-select">
+                        <option>LICING COMERCIO LTDA - 55</option>
+                    </select>
+                </div>
+                <div class="divider"></div>
+                <div class="info-item">
+                    <label>Competência:</label>
+                    <input type="month" id="competencia-input" class="header-input" value="2026-05">
+                </div>
+                <div class="divider"></div>
+                <div class="info-item">
+                    <label>Usuário:</label>
+                    <span>ARTURMN</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-icon" title="Configurações"><i class="fas fa-cog"></i></button>
+                <button class="btn-icon" title="Sair" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </header>
+
+        <!-- MAIN CONTAINER -->
+        <div class="main-container">
+            <!-- SIDEBAR -->
+            <aside class="sidebar">
+                <nav class="sidebar-nav">
+                    <div class="nav-group">
+                        <a href="#" class="nav-item active" data-module="dashboard"
+                            onclick="switchModule(event, 'dashboard')">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </div>
+                    <div class="nav-group">
+                        <div class="nav-group-title">Movimentação</div>
+                        <a href="#" class="nav-item" data-module="escrita" onclick="switchModule(event, 'escrita')">
+                            <i class="fas fa-file-contract"></i>
+                            <span>Escrita Fiscal</span>
+                        </a>
+                        <a href="#" class="nav-item" data-module="entradas" onclick="switchModule(event, 'entradas')">
+                            <i class="fas fa-arrow-down"></i>
+                            <span>Entradas</span>
+                        </a>
+                        <a href="#" class="nav-item" data-module="saidas" onclick="switchModule(event, 'saidas')">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>Saídas</span>
+                        </a>
+                        <a href="#" class="nav-item" data-module="servicos" onclick="switchModule(event, 'servicos')">
+                            <i class="fas fa-handshake"></i>
+                            <span>Serviços</span>
+                        </a>
+                    </div>
+                    <div class="nav-group">
+                        <div class="nav-group-title">Apuração</div>
+                        <a href="#" class="nav-item" data-module="apuracao" onclick="switchModule(event, 'apuracao')">
+                            <i class="fas fa-calculator"></i>
+                            <span>Apuração</span>
+                        </a>
+                        <a href="#" class="nav-item" data-module="sped" onclick="switchModule(event, 'sped')">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>SPED Fiscal</span>
+                        </a>
+                    </div>
+                    <div class="nav-group">
+                        <div class="nav-group-title">Cadastros</div>
+                        <a href="#" class="nav-item" data-module="cadastros" onclick="switchModule(event, 'cadastros')">
+                            <i class="fas fa-database"></i>
+                            <span>Cadastros</span>
+                        </a>
+                    </div>
+                    <div class="nav-group">
+                        <div class="nav-group-title">Relatórios</div>
+                        <a href="#" class="nav-item" data-module="relatorios"
+                            onclick="switchModule(event, 'relatorios')">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Relatórios</span>
+                        </a>
+                    </div>
+                    <div class="nav-group">
+                        <div class="nav-group-title">Sistema</div>
+                        <a href="#" class="nav-item" data-module="config" onclick="switchModule(event, 'config')">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>Configurações</span>
+                        </a>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- CONTENT AREA -->
+            <div class="content-area">
+                <div class="module-container" id="module-container">
+                    <!-- Conteúdo dinâmico será inserido aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/corporate.js') }}"></script>
+</body>
+
+</html>

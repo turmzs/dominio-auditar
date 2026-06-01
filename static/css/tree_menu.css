@@ -1,0 +1,310 @@
+/* ============================================
+   TREE MENU LAYOUT - DOMINIO ESCRITA FISCAL
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --teal-darkest: #0d3a3a;
+    --teal-dark: #155e5e;
+    --teal-brand: #1a7171;
+    --teal-light: #2fa3a3;
+    --text-light: #e8f0f0;
+    --text-muted: #a8bfbf;
+    --bg-dark: #0d3a3a;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg-dark);
+    color: var(--text-light);
+    overflow: hidden;
+}
+
+/* ===== APP CONTAINER ===== */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+
+/* ===== TOP BAR ===== */
+.top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 50px;
+    background: linear-gradient(135deg, var(--teal-darkest) 0%, var(--teal-dark) 100%);
+    border-bottom: 1px solid var(--teal-brand);
+    padding: 0 20px;
+    flex-shrink: 0;
+}
+
+.app-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.app-title i {
+    font-size: 16px;
+    color: #e91e63;
+}
+
+.top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    font-size: 11px;
+    text-align: right;
+}
+
+.username {
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.company {
+    color: var(--text-muted);
+    font-size: 10px;
+}
+
+.date {
+    color: var(--text-muted);
+    font-size: 10px;
+}
+
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: 1px solid var(--teal-light);
+    color: var(--text-light);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    background: var(--teal-light);
+    color: white;
+}
+
+/* ===== MAIN WRAPPER ===== */
+.main-wrapper {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    gap: 0;
+}
+
+/* ===== TREE SIDEBAR ===== */
+.tree-sidebar {
+    width: 280px;
+    background: linear-gradient(180deg, #0a2a2a 0%, #0d3a3a 100%);
+    border-right: 1px solid var(--teal-brand);
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.menu-tree {
+    padding: 10px 5px;
+}
+
+/* TREE NODE STYLING */
+.tree-node {
+    margin: 2px 0;
+}
+
+.tree-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 8px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 12px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.tree-item:hover {
+    color: var(--text-light);
+    background: rgba(26, 113, 113, 0.3);
+}
+
+.tree-item.active {
+    color: var(--text-light);
+    background: rgba(26, 113, 113, 0.4);
+    border-left-color: #e91e63;
+    font-weight: 600;
+}
+
+/* TREE TOGGLE ICONS */
+.tree-toggle {
+    display: inline-block;
+    width: 16px;
+    text-align: center;
+    margin-right: 4px;
+    font-size: 10px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.tree-toggle.collapsed {
+    transform: rotate(-90deg);
+}
+
+.tree-placeholder {
+    width: 16px;
+    margin-right: 4px;
+}
+
+/* TREE CHILDREN */
+.tree-children {
+    margin-left: 12px;
+    border-left: 1px solid rgba(26, 113, 113, 0.3);
+    max-height: 1000px;
+    overflow: hidden;
+    animation: expandTree 0.3s ease;
+}
+
+.tree-children.collapsed {
+    max-height: 0;
+    animation: collapseTree 0.3s ease;
+}
+
+@keyframes expandTree {
+    from {
+        max-height: 0;
+        opacity: 0;
+    }
+
+    to {
+        max-height: 1000px;
+        opacity: 1;
+    }
+}
+
+@keyframes collapseTree {
+    from {
+        max-height: 1000px;
+        opacity: 1;
+    }
+
+    to {
+        max-height: 0;
+        opacity: 0;
+    }
+}
+
+/* SECTION TITLES */
+.tree-section {
+    padding: 8px 8px 4px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--teal-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+
+.tree-section:first-child {
+    margin-top: 0;
+}
+
+/* ===== CONTENT AREA ===== */
+.content-area {
+    flex: 1;
+    background: linear-gradient(135deg, #0d3a3a 0%, #0f4a4a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+}
+
+.content-panel {
+    width: 100%;
+    height: 100%;
+    padding: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.welcome-message {
+    text-align: center;
+}
+
+.welcome-message h1 {
+    font-size: 36px;
+    color: var(--text-light);
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.welcome-message p {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--teal-darkest);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--teal-brand);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--teal-light);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+    .tree-sidebar {
+        width: 240px;
+    }
+}
+
+@media (max-width: 768px) {
+    .tree-sidebar {
+        width: 200px;
+    }
+
+    .tree-item {
+        font-size: 11px;
+        padding: 5px 6px;
+    }
+}

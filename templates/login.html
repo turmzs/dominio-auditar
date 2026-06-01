@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Login - Domínio Auditar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Pequeno ajuste para centralizar o formulário de login (escopo: login-page) */
+        body.login-page .desktop-workspace{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 32px);padding:0;margin:0}
+
+        .login-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width:100%;
+        }
+
+        .login-card {
+            background: var(--win-surface);
+            padding: 28px;
+            border-radius: 8px;
+            box-shadow: 0 12px 40px rgba(2, 6, 23, 0.35);
+            width: 360px;
+            max-width: 92vw;
+        }
+
+        .login-card h2 {
+            margin-bottom: 12px;
+            color: var(--teal-brand);
+            text-align:left;
+        }
+
+        .login-card label {
+            display: block;
+            font-weight: 700;
+            margin-top: 12px;
+            margin-bottom: 6px;
+            color: var(--text-dark);
+        }
+
+        .login-card input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--win-border);
+            border-radius: 6px;
+        }
+
+        .login-btn {
+            margin-top: 18px;
+            width: 100%;
+            padding: 10px;
+            background: var(--teal-brand);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .login-footer {
+            margin-top: 12px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+
+<body class="login-page">
+    <div class="desktop-main-container">
+        <header class="window-titlebar">
+            <div class="titlebar-left">
+                <i class="fa-solid fa-scale-balanced logo-mini"></i>
+                <span class="titlebar-text">Domínio Escrita Fiscal - Login</span>
+            </div>
+            <div class="titlebar-right"></div>
+        </header>
+
+        <div class="desktop-workspace">
+            <div class="login-wrap">
+                <div class="login-card">
+                    <h2>Entrar no Domínio Auditar</h2>
+                    <form method="post" action="{{ url_for('login_post') }}">
+                        <label for="username">Usuário</label>
+                        <input id="username" name="username" type="text" required autofocus>
+
+                        <label for="password">Senha</label>
+                        <input id="password" name="password" type="password" required>
+
+                        <button class="login-btn" type="submit">Entrar</button>
+                    </form>
+                    <div class="login-footer">Usuário padrão: <strong>admin</strong> / Senha: <strong>admin</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+
+</html>

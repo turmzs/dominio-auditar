@@ -70,6 +70,19 @@ class DatabaseManager:
                 )
             """)
 
+            # Tabela para Escrituração Fiscal consolidada (JSON por competência)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS escritura_fiscal (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    empresa_id INTEGER NOT NULL,
+                    mes INTEGER NOT NULL,
+                    ano INTEGER NOT NULL,
+                    entries_json TEXT NOT NULL,
+                    FOREIGN KEY(empresa_id) REFERENCES empresas(id) ON DELETE CASCADE,
+                    UNIQUE(empresa_id, mes, ano)
+                )
+            """)
+
             # Inserir empresa de teste caso o banco esteja limpo
             cursor.execute("SELECT COUNT(*) FROM empresas")
             if cursor.fetchone()[0] == 0:
@@ -270,3 +283,62 @@ class DatabaseManager:
             return faturamento_escriturado
         else:
             return empresa.get('faturamento_anual', 0)
+
+    # ----------------------------------
+    # Persistência de Memória e Escrituração
+    # ----------------------------------
+    def salvar_memoria_calculo(self, empresa_id, mes, ano, regime, resultado_json):
+        """Armazena (ou substitui) a memória de cálculo do período em JSON."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            try:
+                cursor.execute("""
+                    INSERT OR REPLACE INTO memorias_calculo (empresa_id, mes, ano, regime, resultado_json)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (empresa_id, mes, ano, regime, resultado_json))
+                conn.commit()
+                return True
+            except Exception as e:
+                print(f"Erro ao salvar memoria_calculo: {e}")
+                return False
+
+    def obter_memoria_calculo(self, empresa_id, mes, ano):
+        """Retorna o JSON da memória de cálculo para a competência, desserializado."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT resultado_json FROM memorias_calculo WHERE empresa_id = ? AND mes = ? AND ano = ?", (empresa_id, mes, ano))
+            row = cursor.fetchone()
+            if row and row[0]:
+                try:
+                    return json.loads(row[0])
+                except Exception:
+                    return row[0]
+            return None
+
+    def salvar_escritura_fiscal(self, empresa_id, mes, ano, entries):
+        """Armazena (ou substitui) a escrituração fiscal (lista de lançamentos) em JSON."""
+        entries_json = json.dumps(entries, ensure_ascii=False)
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            try:
+                cursor.execute("""
+                    INSERT OR REPLACE INTO escritura_fiscal (empresa_id, mes, ano, entries_json)
+                    VALUES (?, ?, ?, ?)
+                """, (empresa_id, mes, ano, entries_json))
+                conn.commit()
+                return True
+            except Exception as e:
+                print(f"Erro ao salvar escritura_fiscal: {e}")
+                return False
+
+    def obter_escritura_fiscal(self, empresa_id, mes, ano):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT entries_json FROM escritura_fiscal WHERE empresa_id = ? AND mes = ? AND ano = ?", (empresa_id, mes, ano))
+            row = cursor.fetchone()
+            if row and row[0]:
+                try:
+                    return json.loads(row[0])
+                except Exception:
+                    return row[0]
+            return None

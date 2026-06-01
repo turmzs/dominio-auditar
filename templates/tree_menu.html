@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domínio Auditar - Escrita Fiscal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tree_menu.css') }}">
+</head>
+
+<body>
+    <div class="app-container">
+
+        <!-- TOP BAR -->
+        <header class="top-bar">
+            <div class="app-title">
+                <i class="fa-solid fa-scale-balanced"></i>
+                <span>Domínio Escrita Fiscal - Versão: 10.6A-05 - 01</span>
+            </div>
+
+            <div class="top-bar-right">
+                <div class="user-info">
+                    <span class="username">ARTURMN</span>
+                    <span class="company">LICING COMERCIO LTDA - 55</span>
+                    <span class="date">MAI/2026</span>
+                </div>
+                <button class="btn-icon" title="Sair" onclick="logout()"><i
+                        class="fa-solid fa-sign-out-alt"></i></button>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-wrapper">
+
+            <!-- TREE MENU SIDEBAR -->
+            <aside class="tree-sidebar">
+                <div class="menu-tree" id="menu-tree">
+                    <!-- Menu será gerado dinamicamente -->
+                </div>
+            </aside>
+
+            <!-- CONTENT AREA -->
+            <main class="content-area">
+                <div class="content-panel" id="content-panel">
+                    <div class="welcome-message">
+                        <h1>Bem-vindo ao Domínio Escrita Fiscal</h1>
+                        <p>Selecione uma opção no menu à esquerda para começar.</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/tree_menu.js') }}"></script>
+</body>
+
+</html>
