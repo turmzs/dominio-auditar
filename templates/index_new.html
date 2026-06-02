@@ -68,28 +68,7 @@
                 </div>
 
                 <!-- RELATÓRIOS MENU -->
-                <div class="menu-dropdown" onclick="toggleMenu(event, 'menu-relatorios')">
-                    <a href="#" class="menu-item">Relatórios</a>
-                    <ul class="dropdown-menu" id="menu-relatorios">
-                        <li><a href="#" onclick="switchTab('relatorios')">Análise Fiscal</a></li>
-                        <li><a href="#" onclick="showAlert('SPED')">SPED</a></li>
-                        <li><a href="#" onclick="showAlert('ECF')">ECF</a></li>
-                        <li class="divider"></li>
-                        <li><a href="#" onclick="showAlert('Tributos')">Tributos</a></li>
-                    </ul>
-                </div>
 
-                <!-- UTILITÁRIOS MENU -->
-                <div class="menu-dropdown" onclick="toggleMenu(event, 'menu-utilitarios')">
-                    <a href="#" class="menu-item">Utilitários</a>
-                    <ul class="dropdown-menu" id="menu-utilitarios">
-                        <li><a href="#" onclick="switchTab('utilitarios')">Ferramentas</a></li>
-                        <li><a href="#" onclick="showAlert('Calculadora')">Calculadora</a></li>
-                        <li><a href="#" onclick="showAlert('Backup')">Backup</a></li>
-                        <li class="divider"></li>
-                        <li><a href="#" onclick="showAlert('Sincronização')">Sincronização</a></li>
-                    </ul>
-                </div>
 
                 <!-- FAVORITOS -->
                 <a href="#" class="menu-item" onclick="switchTab('favoritos')">Favoritos</a>
@@ -101,7 +80,7 @@
             <div class="top-bar-right">
                 <div class="user-info">
                     <span class="username">ARTURMN</span>
-                    <span class="company">LICING COMERCIO LTDA - 55</span>
+                    <span class="company">DOMINIO-AUDITAR</span>
                     <span class="date">MAI/2026</span>
                 </div>
             </div>
@@ -119,15 +98,16 @@
                     <button class="icon-btn" title="Painel" onclick="switchTab('dashboard')"><i
                             class="fa-solid fa-building"></i></button>
                     <button class="icon-btn" title="Documentos"><i class="fa-solid fa-file-contract"></i></button>
-                    <button class="icon-btn" title="Movimentos"><i class="fa-solid fa-arrows-alt"></i></button>
-                    <button class="icon-btn" title="Relatórios"><i class="fa-solid fa-chart-bar"></i></button>
-                    <button class="icon-btn" title="Buscar"><i class="fa-solid fa-search"></i></button>
+
+                    <button class="icon-btn" title="Apuração" onclick="switchTab('apuracao')"><i
+                            class="fa-solid fa-scale-balanced"></i></button>
+                    <button class="icon-btn" title="Consultar Apuração" onclick="switchTab('consulta_apuracao')"><i
+                            class="fa-solid fa-magnifying-glass"></i></button>
                     <button class="icon-btn" title="Gerenciador"><i class="fa-solid fa-folder-open"></i></button>
-                    <button class="icon-btn" title="Utilitários"><i class="fa-solid fa-toolbox"></i></button>
-                    <button class="icon-btn" title="Sync"><i class="fa-solid fa-sync"></i></button>
                     <button class="icon-btn" title="Calculadora"><i class="fa-solid fa-calculator"></i></button>
                     <button class="icon-btn" title="Gráficos"><i class="fa-solid fa-chart-pie"></i></button>
                     <button class="icon-btn" title="Livro"><i class="fa-solid fa-book"></i></button>
+
                 </nav>
             </aside>
 

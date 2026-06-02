@@ -8,6 +8,8 @@ from escrita_fiscal import gerar_escritura_fiscal
 
 from architecture import ARCHITECTURE, IMPLEMENTATION_PHASES
 from src.modules.routes import modules_bp
+from urllib.parse import parse_qs
+
 
 # Import AuthManager robustly: some runtimes may not include repo root in sys.path
 
@@ -29,6 +31,21 @@ db = DatabaseManager()
 # Register blueprints
 app.register_blueprint(modules_bp)
 
+# Domain canonical endpoints (fase 1)
+try:
+    from src.domain_canonic.routes import bp as domain_canonic_bp
+    app.register_blueprint(domain_canonic_bp)
+except Exception:
+    pass
+
+try:
+    from src.domain_canonic.competence_routes import bp as competence_routes_bp
+    app.register_blueprint(competence_routes_bp)
+except Exception:
+    pass
+
+
+
 # Banco de usuários separado para autenticação
 
 auth_manager = AuthManager(db_path=os.path.join(os.path.dirname(__file__), "auth.db"))
@@ -38,6 +55,31 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret-change-me")
 
 @app.route("/")
 def index():
+    # Protege a rota principal: redireciona para login se não autenticado
+    if "user_id" not in session:
+        return redirect(url_for("login_page"))
+
+    # Em produção, este valor poderá ser obtido a partir da sessão de login ou cookies de SSO da sua empresa.
+    user_name = session.get("username", os.getenv("CURRENT_USER", "ARTURMMN"))
+
+    # Tela principal do ERP (layout novo)
+    return render_template("index_new.html", user_name=user_name)
+
+
+@app.route("/index")
+def index_alias():
+    # Compatibilidade com links que usam /index?tab=... (frontend)
+    return index()
+
+
+
+@app.route("/architecture")
+def architecture_menu():
+    # Protege a rota: redireciona para login se não autenticado
+    if "user_id" not in session:
+        return redirect(url_for("login_page"))
+
+    user_name = session.get("username", os.getenv("CURRENT_USER", "ARTURMMN"))
     # Protege a rota principal: redireciona para login se não autenticado
     if "user_id" not in session:
         return redirect(url_for("login_page"))
@@ -90,12 +132,19 @@ def logout_route():
 
 @app.route("/api/architecture", methods=["GET"])
 def get_architecture():
+    # O frontend (static/js/architecture_menu.js) espera:
+    # - architecture: lista em cascata com campos {id,label,etapa,submenus}
+    # - implementation_phases: lista de fases
+    from architecture import get_menu_structure
+
     return jsonify(
         {
-            "architecture": ARCHITECTURE,
+            "architecture": get_menu_structure(),
             "implementation_phases": IMPLEMENTATION_PHASES,
         }
     )
+
+
 
 
 @app.route("/api/empresas", methods=["GET"])

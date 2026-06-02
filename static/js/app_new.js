@@ -11,16 +11,16 @@ let activeTab = 'dashboard';
 function toggleMenu(e, menuId) {
     e.preventDefault();
     e.stopPropagation();
-    
+
     const menu = document.getElementById(menuId);
-    
+
     // Close all other menus
     document.querySelectorAll('.dropdown-menu').forEach(m => {
         if (m.id !== menuId) {
             m.classList.remove('show');
         }
     });
-    
+
     // Toggle current menu
     menu.classList.toggle('show');
 }
@@ -28,7 +28,7 @@ function toggleMenu(e, menuId) {
 /**
  * Close all menus when clicking outside
  */
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
     if (!e.target.closest('.menu-dropdown')) {
         document.querySelectorAll('.dropdown-menu').forEach(menu => {
             menu.classList.remove('show');
@@ -56,6 +56,9 @@ function switchTab(tabName) {
  */
 function loadContent(tabName) {
     const contentArea = document.getElementById('dashboard-content');
+
+    if (!contentArea) return;
+
 
     switch (tabName) {
         case 'dashboard':
@@ -187,9 +190,18 @@ function loadContent(tabName) {
                 </div>
             `;
             break;
+
+        case 'apuracao':
+            // Consulta de apuração: roda o motor (DRE/memória) via endpoints existentes no app.py
+            contentArea.innerHTML = `<div class="alert-info-box"><i class="fa-solid fa-triangle-exclamation text-warning"></i><p>Apuração/Consulta requer Empresa Ativa e Período (a UI nova ainda não conecta esses dados como a UI antiga).</p></div>`;
+            break;
+
+        case 'consulta_apuracao':
+            contentArea.innerHTML = `<div class="alert-info-box"><i class="fa-solid fa-triangle-exclamation text-warning"></i><p>Apuração/Consulta requer Empresa Ativa e Período (a UI nova ainda não conecta esses dados como a UI antiga).</p></div>`;
+            break;
         case 'utilitarios':
             contentArea.innerHTML = `
-                <div class="section-container">
+                    < div class="section-container" >
                     <div class="section-header">
                         <h2>Utilitários e Ferramentas</h2>
                     </div>
@@ -219,22 +231,22 @@ function loadContent(tabName) {
                             <button onclick="showAlert('Upload Fiscal')">Enviar</button>
                         </div>
                     </div>
-                </div>
-            `;
+                </div >
+                    `;
             break;
         case 'favoritos':
             contentArea.innerHTML = `
-                <div class="section-container">
+                    < div class="section-container" >
                     <div class="section-header">
                         <h2>Favoritos</h2>
                     </div>
                     <p style="color: var(--text-muted); padding: 20px;">Nenhum favorito adicionado. Use o menu para adicionar atalhos rápidos.</p>
-                </div>
-            `;
+                </div >
+                    `;
             break;
         case 'ajuda':
             contentArea.innerHTML = `
-                <div class="section-container">
+                    < div class="section-container" >
                     <div class="section-header">
                         <h2>Ajuda e Documentação</h2>
                     </div>
@@ -252,11 +264,11 @@ function loadContent(tabName) {
                             <p>Contate: suporte@dominio.com.br</p>
                         </div>
                     </div>
-                </div>
-            `;
+                </div >
+                    `;
             break;
         default:
-            contentArea.innerHTML = `<div class="section-content">Conteúdo não encontrado</div>`;
+            contentArea.innerHTML = `< div class="section-content" > Conteúdo não encontrado</div > `;
     }
 }
 
@@ -265,6 +277,80 @@ function loadContent(tabName) {
  */
 function showAlert(feature) {
     alert(`${feature} - Funcionalidade em desenvolvimento`);
+}
+
+// Apuração (Lancamentos vs Consulta)
+function loadApuracao(empresaId, mes, ano, apenasConsulta) {
+    const contentArea = document.getElementById('dashboard-content');
+    if (!contentArea) return;
+
+    contentArea.innerHTML = `< div class="alert-info-box" ><i class="fa-solid fa-spinner fa-spin text-info"></i><p>Processando ${apenasConsulta ? 'Consulta' : 'Apuração'}...</p></div > `;
+
+    // DRE
+    Promise.all([
+        fetch(`/api/apuracao/dre?empresa_id=${empresaId}&mes=${mes}&ano=${ano}`),
+        fetch(`/api/apuracao/memoria?empresa_id=${empresaId}&mes=${mes}&ano=${ano}`)
+    ])
+        .then(async ([dreRes, memoriaRes]) => {
+            const dreData = await dreRes.json();
+            const memoriaData = await memoriaRes.json();
+
+            let memoriaHtml = ``;
+            if (memoriaData.memoria && memoriaData.memoria.length > 0) {
+                memoriaHtml = memoriaData.memoria.map(item => {
+                    const details = item.detalhamento && Object.keys(item.detalhamento).length > 0 ? Object.entries(item.detalhamento) : [];
+                    const detailsHtml = details.length
+                        ? `< div class="mem-details" > <ul>` + details.map(([k, v]) => `<li><strong>${k}:</strong> ${v}</li>`).join('') + `</ul></div > `
+                        : ``;
+                    return `
+                    < div class="memoria-card" >
+                            <div class="memoria-card-header" onclick="toggleAccordion(this)">
+                                <h4>${item.imposto}</h4>
+                                <span>R$ ${item.valor_total}</span>
+                            </div>
+                            <div class="memoria-card-body" style="display:none;">
+                                <div class="mem-row"><span>Base de Cálculo:</span><span>R$ ${item.base_calculo}</span></div>
+                                <div class="mem-row"><span>Alíquota:</span><span>${item.aliquota}%</span></div>
+                                <div class="mem-row"><span>Total:</span><span>R$ ${item.valor_total}</span></div>
+                                ${detailsHtml}
+                            </div>
+                        </div >
+                    `;
+                }).join('');
+            } else {
+                memoriaHtml = `< div class="alert-info-box" > <p>Nenhuma memória de cálculo gerada.</p></div > `;
+            }
+
+            contentArea.innerHTML = `
+                    < div class="calculation-container" >
+                    <div class="calc-col" id="dre-wrapper">${dreData.html || '<div class="alert-info-box">Sem dados de DRE.</div>'}</div>
+                    <div class="calc-col">
+                        <div class="panel">
+                            <div class="panel-header flex-header">
+                                <h3><i class="fa-solid fa-microchip text-primary-light"></i> Memória de Cálculo</h3>
+                            </div>
+                            <div class="panel-body scroll-vertical" id="calc-memoria-wrapper" style="max-height: calc(100vh - 280px);">${memoriaHtml}</div>
+                        </div>
+                        ${apenasConsulta ? `<div class="text-muted" style="margin-top:10px;">Modo: CONSULTA (sem geração de lançamentos)</div>` : ''}
+                        <div class="text-muted" style="margin-top:6px;">Modo: ${apenasConsulta ? 'Consultar Apuração' : 'Apurar / Calcular'}</div>
+                    </div>
+                </div >
+                    `;
+        })
+        .catch(() => {
+            contentArea.innerHTML = `< div class="alert-info-box" ><i class="fa-solid fa-triangle-exclamation text-danger"></i><p>Erro ao calcular apuração.</p></div > `;
+        });
+}
+
+// usado no HTML gerado acima
+function toggleAccordion(header) {
+    const body = header.nextElementSibling;
+    if (!body) return;
+    if (body.style.display === 'none' || !body.style.display) {
+        body.style.display = 'flex';
+    } else {
+        body.style.display = 'none';
+    }
 }
 
 // Initialize on page load

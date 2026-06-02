@@ -93,8 +93,9 @@ def load_all_routes(app):
         from src.modules.routes import modules_bp
         app.register_blueprint(modules_bp)
         print('[Registry] API de Arquitetura registrada!')
-        except Exception as e:
+    except Exception as e:
         print(f'[Registry] Erro ao registrar API: {e}')
+
 
     # 2. Varredura de módulos
     base_path = pathlib.Path(__file__).resolve().parent.parent
@@ -117,5 +118,6 @@ def load_all_routes(app):
                 })
                 print(f'[Registry] Registrado: {module_name}')
         except Exception as e:
-            print(f'[Registry] Erro no modulo {module_name}: {e}')```
+            print(f'[Registry] Erro no modulo {module_name}: {e}')
+
 

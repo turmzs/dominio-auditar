@@ -30,10 +30,9 @@ def module_status(module_id: str):
     )
 
 
-@modules_bp.route("/architecture", methods=["GET"])
-def get_architecture():
-    """Retorna a lista de todos os módulos carregados para o frontend"""
-    # Lógica de varredura movida para cá para evitar o erro de Syntax do registry.py
+@modules_bp.route("/modules/architecture", methods=["GET"])
+def get_architecture_modules():
+    """Lista módulos carregados para o frontend (evita conflito com /api/architecture)."""
     base_path = pathlib.Path(__file__).resolve().parent.parent
     for loader, module_name, is_pkg in pkgutil.walk_packages(
         [str(base_path)], prefix=base_path.name + "."

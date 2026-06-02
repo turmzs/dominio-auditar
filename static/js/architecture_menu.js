@@ -154,44 +154,39 @@ function loadModule(moduleId, moduleName, route, parentName = '') {
         breadcrumb.innerHTML = `<span class="breadcrumb-item">Home</span><span class="breadcrumb-item">${title}</span>`;
     }
 
-    // Buscar status do módulo (placeholder agora, mas já habilita evolução)
-    fetch(`/api/modules/${encodeURIComponent(moduleId)}/status`, { method: 'GET', headers: { 'Accept': 'application/json' } })
-        .then(r => r.ok ? r.json() : Promise.reject(new Error('status inválido')))
-        .then(meta => {
-            const body = document.getElementById('module-body');
-            if (!body) return;
+    // Redirecionar para a tela real (index.html) aplicando o tab correto.
+    // A árvore é apenas navegação; as funcionalidades reais vivem em index.html.
+    const tab = mapModuleIdToIndexTab(moduleId);
+    const filter = mapModuleIdToInvoiceFilter(moduleId);
 
-            const etapa = meta.etapa ?? 'N/A';
-            const status = meta.status ?? 'em_desenvolvimento';
+    const params = new URLSearchParams();
+    if (tab) params.set('tab', tab);
+    if (filter) params.set('filter', filter);
 
-            body.innerHTML = `
-        <div class="module-placeholder">
-          <h3>${meta.label || moduleName}</h3>
-          <p>Módulo em desenvolvimento...</p>
-          <div class="route-info">
-            <strong>Route:</strong> ${meta.route || route || '-'}<br/>
-            <strong>ID:</strong> ${meta.module_id || moduleId}<br/>
-            <strong>ETAPA:</strong> ${etapa}<br/>
-            <strong>Status:</strong> ${status}<br/>
-          </div>
-        </div>
-      `;
-        })
-        .catch(() => {
-            const body = document.getElementById('module-body');
-            if (!body) return;
-            body.innerHTML = `
-        <div class="module-placeholder">
-          <h3>${moduleName}</h3>
-          <p>Módulo em desenvolvimento...</p>
-          <div class="route-info">
-            <strong>Route:</strong> ${route}<br/>
-            <strong>ID:</strong> ${moduleId}
-          </div>
-        </div>
-      `;
-        });
+    // Passa um hint para o JS da index aplicar o estado.
+    window.location.href = `/index?${params.toString()}`;
 }
+
+function mapModuleIdToIndexTab(moduleId) {
+    // Esperado em architecture.py: ids como 'empresas', 'entradas', 'saidas', 'apuracao_simples', etc.
+    const id = String(moduleId || '').toLowerCase();
+
+    if (id.includes('empresas')) return 'empresas';
+    if (id.includes('apuracao')) return 'apuracao';
+    if (id.includes('movimentos')) return 'notas';
+    // Entradas/Saídas estão dentro de notas com filtro
+    if (id.includes('entradas') || id.includes('saidas') || id.includes('servicos')) return 'notas';
+
+    return 'dashboard';
+}
+
+function mapModuleIdToInvoiceFilter(moduleId) {
+    const id = String(moduleId || '').toLowerCase();
+    if (id.includes('entradas')) return 'entrada';
+    if (id.includes('saidas')) return 'saida';
+    return null;
+}
+
 
 // Renderizar fases
 function renderPhases() {
