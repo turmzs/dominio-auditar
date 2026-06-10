@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdfeProc xmlns="http://www.portalfiscal.inf.br/mdfe">
+  <MDFe>
+    <infMDFe Id="MDFe35240612345678000190160010000000011000000011">
+      <ide>
+        <nMDF>1001</nMDF>
+        <serie>1</serie>
+        <dhEmi>2024-06-02T06:00:00-03:00</dhEmi>
+      </ide>
+      <emit>
+        <CNPJ>12345678000100</CNPJ>
+        <xNome>Transportadora MDF-e LTDA</xNome>
+      </emit>
+      <tot>
+        <qNFe>15</qNFe>
+        <qCTe>3</qCTe>
+        <vCarga>85000.00</vCarga>
+      </tot>
+    </infMDFe>
+  </MDFe>
+</mdfeProc>

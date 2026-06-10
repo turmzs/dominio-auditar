@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CompNfse xmlns="http://www.abrasf.org.br/nfse.xsd">
+  <Nfse>
+    <InfNfse>
+      <Numero>201500000000279</Numero>
+      <CodigoVerificacao>ABC123XYZ</CodigoVerificacao>
+      <DataEmissao>2024-05-10T14:30:00</DataEmissao>
+      <ValoresNfse>
+        <ValorLiquidoNfse>1500.00</ValorLiquidoNfse>
+      </ValoresNfse>
+      <PrestadorServico>
+        <IdentificacaoPrestador>
+          <Cnpj>12345678000100</Cnpj>
+        </IdentificacaoPrestador>
+        <RazaoSocial>Prestador Servicos LTDA</RazaoSocial>
+      </PrestadorServico>
+      <TomadorServico>
+        <IdentificacaoTomador>
+          <CpfCnpj><Cnpj>98765432000199</Cnpj></CpfCnpj>
+        </IdentificacaoTomador>
+        <RazaoSocial>Cliente de Teste Ltda</RazaoSocial>
+      </TomadorServico>
+      <Servico>
+        <Valores>
+          <ValorServicos>1500.00</ValorServicos>
+          <ValorIss>75.00</ValorIss>
+          <ValorPis>9.75</ValorPis>
+          <ValorCofins>45.00</ValorCofins>
+        </Valores>
+        <ItemListaServico>17.01</ItemListaServico>
+        <Discriminacao>Consultoria contabil mensal</Discriminacao>
+      </Servico>
+    </InfNfse>
+  </Nfse>
+</CompNfse>

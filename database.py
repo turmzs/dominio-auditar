@@ -116,7 +116,13 @@ class DatabaseManager:
                     VALUES (?, ?, ?, ?, ?, ?)
                 """, (nome, cnpj, regime, atividade, faturamento_anual, folha_anual))
                 conn.commit()
-                return cursor.lastrowid
+                res_id = cursor.lastrowid
+                try:
+                    from src.core.audit_middleware import audit_log
+                    audit_log(1, 'empresas', res_id, 'INSERT', None, {'nome': nome, 'cnpj': cnpj, 'regime': regime, 'atividade': atividade})
+                except Exception:
+                    pass
+                return res_id
             except sqlite3.IntegrityError:
                 # Se o CNPJ já existe, atualizar
                 cursor.execute("""
@@ -126,9 +132,20 @@ class DatabaseManager:
                 """, (nome, regime, atividade, faturamento_anual, folha_anual, cnpj))
                 conn.commit()
                 cursor.execute("SELECT id FROM empresas WHERE cnpj = ?", (cnpj,))
-                return cursor.fetchone()[0]
+                res_id = cursor.fetchone()[0]
+                try:
+                    from src.core.audit_middleware import audit_log
+                    audit_log(1, 'empresas', res_id, 'UPDATE', None, {'nome': nome, 'cnpj': cnpj, 'regime': regime, 'atividade': atividade})
+                except Exception:
+                    pass
+                return res_id
 
     def excluir_empresa(self, id_empresa):
+        try:
+            from src.core.audit_middleware import audit_log
+            audit_log(1, 'empresas', id_empresa, 'DELETE', None, None)
+        except Exception:
+            pass
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM empresas WHERE id = ?", (id_empresa,))
@@ -153,6 +170,12 @@ class DatabaseManager:
                     )
                 """, nota_data)
                 conn.commit()
+                # Tenta logar a gravacao da nota
+                try:
+                    from src.core.audit_middleware import audit_log
+                    audit_log(1, 'notas_fiscais', None, 'SAVE', None, {'numero': nota_data.get('numero'), 'empresa_id': nota_data.get('empresa_id')})
+                except Exception:
+                    pass
                 return True
             except Exception as e:
                 print(f"Erro ao salvar nota no banco: {e}")
@@ -182,6 +205,11 @@ class DatabaseManager:
             return [dict(row) for row in cursor.fetchall()]
 
     def excluir_nota(self, id_nota):
+        try:
+            from src.core.audit_middleware import audit_log
+            audit_log(1, 'notas_fiscais', id_nota, 'DELETE', None, None)
+        except Exception:
+            pass
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM notas_fiscais WHERE id = ?", (id_nota,))

@@ -61,25 +61,21 @@
                     <ul class="dropdown-menu" id="menu-movimentos">
                         <li><a href="#" onclick="switchTab('movimentos')">Notas Fiscais</a></li>
                         <li><a href="#" onclick="showAlert('Lançamentos')">Lançamentos</a></li>
-                        <li><a href="#" onclick="showAlert('Importação')">Importação</a></li>
-                        <li class="divider"></li>
-                        <li><a href="#" onclick="showAlert('Ajustes')">Ajustes</a></li>
+                        <li class="divider"></i>
                     </ul>
                 </div>
 
                 <!-- RELATÓRIOS MENU -->
 
-
                 <!-- FAVORITOS -->
                 <a href="#" class="menu-item" onclick="switchTab('favoritos')">Favoritos</a>
-
                 <!-- AJUDA -->
                 <a href="#" class="menu-item" onclick="switchTab('ajuda')">Ajuda</a>
             </nav>
 
             <div class="top-bar-right">
                 <div class="user-info">
-                    <span class="username">ARTURMN</span>
+                    <span class="username">{{ user_name }}</span>
                     <span class="company">DOMINIO-AUDITAR</span>
                     <span class="date">MAI/2026</span>
                 </div>
@@ -97,6 +93,10 @@
                 <nav class="icon-menu">
                     <button class="icon-btn" title="Painel" onclick="switchTab('dashboard')"><i
                             class="fa-solid fa-building"></i></button>
+
+                    <!-- Cérebro Fiscal (Fase 3: Auditoria) -->
+                    <button class="icon-btn" title="Importação" onclick="switchTab('importacao')"><i
+                            class="fa-solid fa-brain"></i></button>
                     <button class="icon-btn" title="Documentos"><i class="fa-solid fa-file-contract"></i></button>
 
                     <button class="icon-btn" title="Apuração" onclick="switchTab('apuracao')"><i
@@ -136,28 +136,29 @@
         <footer class="bottom-tabs">
             <div class="tab-item active" onclick="switchTab('envio')">
                 <i class="fa-solid fa-envelope"></i>
-                <span>Envio</span>
+                <span la="Envio">Envio</span>
             </div>
             <div class="tab-item" onclick="switchTab('suporte')">
                 <i class="fa-solid fa-headset"></i>
-                <span>Suporte</span>
+                <span la="Suporte">Suporte</span>
             </div>
             <div class="tab-item" onclick="switchTab('esocial')">
                 <i class="fa-solid fa-file-pdf"></i>
-                <span>eSocial</span>
+                <span la="eSocial">eSocial</span>
             </div>
             <div class="tab-item" onclick="switchTab('onbalance')">
                 <i class="fa-solid fa-file-excel"></i>
-                <span>OnBalance</span>
+                <span la="OnBalance">OnBalance</span>
             </div>
             <div class="tab-item" onclick="switchTab('docs')">
                 <i class="fa-solid fa-file-invoice"></i>
-                <span>Docs Fiscais</span>
+                <span la="Docs Fiscais">Docs Fiscais</span>
             </div>
         </footer>
     </div>
 
     <script src="{{ url_for('static', filename='js/app_new.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/fiscal_brain.js') }}"></script>
 </body>
 
 </html>

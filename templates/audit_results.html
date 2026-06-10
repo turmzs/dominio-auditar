@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoria Fiscal - Domínio Auditar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --teal-dark: #0d3a3a;
+            --teal-brand: #1a7171;
+            --teal-light: #2fa3a3;
+            --bg-page: #eef4f4;
+            --text-dark: #1a2e2e;
+            --text-muted: #5a7070;
+            --border: #d0dede;
+            --white: #ffffff;
+            --danger: #c0392b;
+            --danger-bg: #fdecea;
+            --success: #1e8449;
+            --success-bg: #e8f8ef;
+            --warning: #9a7b0a;
+            --warning-bg: #fff8e1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-page);
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--teal-dark), var(--teal-brand));
+            color: #fff;
+            padding: 20px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .page-header h1 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-header p {
+            margin-top: 6px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .back-link {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .audit-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 28px 40px;
+        }
+
+        .info-banner {
+            display: none;
+            background: var(--warning-bg);
+            border: 1px solid #f0d878;
+            color: var(--warning);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 0.92rem;
+        }
+
+        .stats-card {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 180px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 20px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-card .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 4px;
+        }
+
+        .stat-card .value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .stat-card.alert .value {
+            color: var(--danger);
+        }
+
+        .empty-state {
+            display: none;
+            text-align: center;
+            padding: 48px 24px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            color: var(--teal-light);
+        }
+
+        .empty-state p {
+            font-size: 1rem;
+            color: var(--text-dark);
+            margin-top: 8px;
+        }
+
+        .table-wrap {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .audit-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .audit-table th {
+            background: var(--teal-dark);
+            color: #fff;
+            padding: 12px 14px;
+            text-align: left;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .audit-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-dark);
+            font-size: 0.92rem;
+            vertical-align: top;
+        }
+
+        .audit-table tbody tr:hover {
+            background: #f7fbfb;
+        }
+
+        .audit-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .decision-ok {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .decision-conflict {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .badge-ok {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .badge-alert {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .alert-list {
+            margin-top: 6px;
+            font-size: 0.85rem;
+            color: var(--danger);
+            line-height: 1.45;
+        }
+
+        .trib-info {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="page-header">
+        <div>
+            <h1><i class="fas fa-brain"></i> Análise Fiscal</h1>
+            <p>Movimento <strong>#<span id="movement-id">-</span></strong><span id="nota-info"></span></p>
+        </div>
+        <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> Voltar ao sistema</a>
+    </header>
+
+    <div class="audit-container">
+        <div id="info-banner" class="info-banner"></div>
+
+        <div class="stats-card">
+            <div class="stat-card">
+                <div class="label">Valor total da nota</div>
+                <div class="value" id="valor-total-nota">R$ 0,00</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Itens processados</div>
+                <div class="value" id="total-items">0</div>
+            </div>
+            <div class="stat-card alert">
+                <div class="label">Divergências</div>
+                <div class="value" id="total-alerts">0</div>
+            </div>
+        </div>
+
+        <div id="empty-state" class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <p id="empty-message">Nenhum item encontrado para este movimento.</p>
+        </div>
+
+        <div class="table-wrap" id="table-wrap">
+            <table class="audit-table" id="audit-table">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th id="col-classificacao">NCM</th>
+                        <th id="col-tributacao">CST</th>
+                        <th>Valor</th>
+                        <th>Decisão</th>
+                        <th>Tributação</th>
+                        <th>Alertas</th>
+                    </tr>
+                </thead>
+                <tbody id="audit-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function esc(text) {
+            const d = document.createElement('div');
+            d.textContent = text || '';
+            return d.innerHTML;
+        }
+
+        function formatBRL(value) {
+            const n = Number(value) || 0;
+            return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        async function loadAuditResults() {
+            const params = new URLSearchParams(window.location.search);
+            const movId = params.get('id');
+            const dup = params.get('dup') === '1';
+
+            if (!movId) {
+                showEmpty('ID do movimento não encontrado na URL.');
+                return;
+            }
+
+            document.getElementById('movement-id').innerText = movId;
+
+            if (dup) {
+                const banner = document.getElementById('info-banner');
+                banner.style.display = 'block';
+                banner.innerHTML = '<i class="fas fa-info-circle"></i> Esta nota já havia sido importada. Exibindo a auditoria do movimento existente.';
+            }
+
+            try {
+                const response = await fetch(`/motor_fiscal/resultado/${movId}`);
+                const ct = (response.headers.get('content-type') || '').toLowerCase();
+
+                let payload;
+                if (ct.includes('application/json')) {
+                    payload = await response.json();
+                } else {
+                    const txt = await response.text();
+                    throw new Error(
+                        `Resposta não-JSON do servidor ao carregar auditoria (content-type: ${ct}). Texto inicial: ${txt.slice(0, 200)}`
+                    );
+                }
+
+                if (!response.ok) {
+                    throw new Error(payload.message || 'Falha ao carregar auditoria');
+                }
+
+                const data = Array.isArray(payload) ? payload : (payload.itens || []);
+
+                const tipo = payload.tipo_documento ? ` [${payload.tipo_documento}]` : '';
+                const valorNota = payload.valor_total ?? payload.soma_itens ?? 0;
+                document.getElementById('valor-total-nota').innerText = formatBRL(valorNota);
+
+                let notaInfo = '';
+                if (payload.numero_nota) notaInfo += `${tipo} | Nota ${payload.numero_nota}`;
+                else if (tipo) notaInfo += tipo;
+                if (valorNota > 0) notaInfo += ` | Total ${formatBRL(valorNota)}`;
+                if (notaInfo) document.getElementById('nota-info').innerText = notaInfo;
+
+                if (payload.hint && !data.length) {
+                    showEmpty(payload.hint);
+                    return;
+                }
+
+                if (!data.length) {
+                    showEmpty('Nenhum item encontrado para este movimento.');
+                    return;
+                }
+
+                const isNfse = (payload.tipo_documento || '').toUpperCase() === 'NFSE';
+                const colClassif = document.getElementById('col-classificacao');
+                const colTrib = document.getElementById('col-tributacao');
+                if (colClassif) colClassif.textContent = isNfse ? 'Cód. Serviço' : 'NCM';
+                if (colTrib) colTrib.textContent = isNfse ? 'ISS' : 'CST';
+
+                const body = document.getElementById('audit-body');
+                body.innerHTML = '';
+                let alertCount = payload.total_alertas ?? 0;
+
+                data.forEach(item => {
+                    const hasAlerts = item.alertas && item.alertas.length > 0;
+                    if (payload.total_alertas == null && hasAlerts) alertCount++;
+
+                    const classificacao = isNfse
+                        ? (item.codigo_servico || item.ncm || '-')
+                        : (item.ncm || '-');
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${esc(item.produto || '-')}</td>
+                        <td>${esc(classificacao)}</td>
+                        <td>${esc(item.cst || '-')}</td>
+                        <td>${formatBRL(item.valor_total)}</td>
+                        <td class="${hasAlerts ? 'decision-conflict' : 'decision-ok'}">${esc(item.decisao || 'OK')}</td>
+                        <td class="trib-info">ST: ${esc(item.st || 'NÃO')} | Cr: ${esc(item.credito || 'NÃO')} | Db: ${esc(item.debito || 'NÃO')}</td>
+                        <td>
+                            ${hasAlerts
+                            ? `<span class="badge badge-alert"><i class="fas fa-exclamation-triangle"></i> Alerta</span>
+                                       <div class="alert-list">
+                                          ${item.alertas.map(a => {
+                                // compat: backend antigo pode mandar string
+                                if (typeof a === 'string') return esc(a);
+                                const desc = esc(a.descricao || '');
+                                const hint = a.hint ? esc(a.hint) : null;
+                                return hint
+                                    ? `${desc}<div class="trib-info" style="margin-top:6px;"><strong>Ajuda:</strong> ${hint}</div>`
+                                    : desc;
+                            }).join('<br>')}
+                                       </div>`
+                            : `<span class="badge badge-ok"><i class="fas fa-check"></i> OK</span>`
+                        }
+                        </td>
+                    `;
+                    body.appendChild(row);
+                });
+
+                document.getElementById('total-items').innerText = data.length;
+                document.getElementById('total-alerts').innerText = alertCount;
+
+                if (alertCount > 0) {
+                    const banner = document.getElementById('info-banner');
+                    banner.style.display = 'block';
+                    banner.innerHTML = `<i class="fas fa-lightbulb"></i> Os alertas abaixo são <strong>verificações automáticas</strong> do motor fiscal (NCM, CFOP, CST, crédito etc.) — não indicam falha na importação.`;
+                }
+
+            } catch (error) {
+                console.error('Erro ao carregar resultados:', error);
+                showEmpty(error.message || 'Erro ao buscar dados da auditoria.');
+            }
+        }
+
+        function showEmpty(message) {
+            document.getElementById('empty-state').style.display = 'block';
+            document.getElementById('empty-message').textContent = message;
+            document.getElementById('table-wrap').style.display = 'none';
+        }
+
+        window.onload = loadAuditResults;
+    </script>
+</body>
+
+</html>

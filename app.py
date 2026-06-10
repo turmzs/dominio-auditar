@@ -1,95 +1,45 @@
 import os
 from siege_api import list_invoices, download_invoice_xml
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, session
 from database import DatabaseManager
 from xml_parser import parse_xml_invoice
 from calculadora import CalculadoraTributaria
-from escrita_fiscal import gerar_escritura_fiscal
-
-from architecture import ARCHITECTURE, IMPLEMENTATION_PHASES
-from src.modules.routes import modules_bp
-from urllib.parse import parse_qs
-
-
-# Import AuthManager robustly: some runtimes may not include repo root in sys.path
-
-try:
-    from auth import AuthManager
-except Exception:
-    import importlib.util, sys
-
-    auth_path = os.path.join(os.path.dirname(__file__), "auth.py")
-    spec = importlib.util.spec_from_file_location("auth", auth_path)
-    auth = importlib.util.module_from_spec(spec)
-    sys.modules["auth"] = auth
-    spec.loader.exec_module(auth)
-    AuthManager = auth.AuthManager
+from auth import AuthManager
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 db = DatabaseManager()
-
-# Register blueprints
-app.register_blueprint(modules_bp)
-
-# Domain canonical endpoints (fase 1)
-try:
-    from src.domain_canonic.routes import bp as domain_canonic_bp
-    app.register_blueprint(domain_canonic_bp)
-except Exception:
-    pass
-
-try:
-    from src.domain_canonic.competence_routes import bp as competence_routes_bp
-    app.register_blueprint(competence_routes_bp)
-except Exception:
-    pass
+auth = AuthManager()
 
 
+def _bootstrap_app():
+    """Integra módulos src/, motor fiscal, auditorias e log de alterações."""
+    app.secret_key = os.getenv("SECRET_KEY", "dev-secret-domino-auditar")
 
-# Banco de usuários separado para autenticação
+    try:
+        from init_db import initialize_database
+        initialize_database()
+        from src.database.migrations.add_tipo_documento import run as migrate_tipo_doc
+        migrate_tipo_doc()
+    except Exception as e:
+        print(f"[Bootstrap] Aviso ao inicializar banco: {e}")
 
-auth_manager = AuthManager(db_path=os.path.join(os.path.dirname(__file__), "auth.db"))
-# Chave de sessão (trocar em produção)
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret-change-me")
+    try:
+        from src.modules.registry import load_all_routes
+        load_all_routes(app)
+    except Exception as e:
+        print(f"[Bootstrap] Erro ao carregar rotas: {e}")
 
-
-@app.route("/")
-def index():
-    # Protege a rota principal: redireciona para login se não autenticado
-    if "user_id" not in session:
-        return redirect(url_for("login_page"))
-
-    # Em produção, este valor poderá ser obtido a partir da sessão de login ou cookies de SSO da sua empresa.
-    user_name = session.get("username", os.getenv("CURRENT_USER", "ARTURMMN"))
-
-    # Tela principal do ERP (layout novo)
-    return render_template("index_new.html", user_name=user_name)
-
-
-@app.route("/index")
-def index_alias():
-    # Compatibilidade com links que usam /index?tab=... (frontend)
-    return index()
-
+    try:
+        from src.core.audit_middleware import init_audit_middleware
+        init_audit_middleware(app)
+        print("[Bootstrap] Middleware de auditoria ativo")
+    except Exception as e:
+        print(f"[Bootstrap] Erro no middleware: {e}")
 
 
-@app.route("/architecture")
-def architecture_menu():
-    # Protege a rota: redireciona para login se não autenticado
-    if "user_id" not in session:
-        return redirect(url_for("login_page"))
-
-    user_name = session.get("username", os.getenv("CURRENT_USER", "ARTURMMN"))
-    # Protege a rota principal: redireciona para login se não autenticado
-    if "user_id" not in session:
-        return redirect(url_for("login_page"))
-
-    # Em produção, este valor poderá ser obtido a partir da sessão de login ou cookies de SSO da sua empresa.
-    user_name = session.get("username", os.getenv("CURRENT_USER", "ARTURMMN"))
-    return render_template("architecture_menu.html", user_name=user_name)
+_bootstrap_app()
 
 
-# ========== Autenticação (Login) ==========
 @app.route("/login", methods=["GET"])
 def login_page():
     return render_template("login.html")
@@ -97,65 +47,52 @@ def login_page():
 
 @app.route("/login", methods=["POST"])
 def login_post():
-    data = request.form or request.json or {}
-    username = data.get("username")
-    password = data.get("password")
-    if not username or not password:
-        return jsonify({"error": "Credenciais incompletas"}), 400
-    user = auth_manager.get_user_by_username(username)
-    if not user:
-        return jsonify({"error": "Usuário não encontrado"}), 404
-    if not auth_manager.verify_password(username, password):
-        return jsonify({"error": "Senha inválida"}), 401
-    # Set session
-    session["user_id"] = user["id"]
-    session["username"] = user["username"]
-    return redirect(url_for("index"))
+    username = (request.form.get("username") or "").strip()
+    password = request.form.get("password") or ""
+    if auth.verify_password(username, password):
+        user = auth.get_user_by_username(username) or {}
+        session["user_id"] = user.get("id", 1)
+        session["username"] = username
+        return redirect("/")
+    return render_template("login.html", error="Usuário ou senha inválidos"), 401
 
 
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("login_page"))
+    return redirect("/login")
 
 
-# Alias para compatibilidade com templates legados
-@app.route("/logout_route")
-def logout_route():
-    return logout()
+@app.route("/")
+def index():
+    user_name = session.get("username") or os.getenv("CURRENT_USER", "ARTURMMN")
+    return render_template("index_new.html", user_name=user_name)
+
+
+@app.route("/legado")
+def index_legado():
+    """Interface antiga — apenas para testes/comparação."""
+    user_name = os.getenv("CURRENT_USER", "ARTURMMN")
+    return render_template("index.html", user_name=user_name)
+
+
+@app.route("/novo")
+def index_novo_redirect():
+    """Compatibilidade: redireciona para a home principal."""
+    return redirect("/", code=302)
 
 
 # ==========================================
 # REST API: EMPRESAS
 # ==========================================
 
-
-@app.route("/api/architecture", methods=["GET"])
-def get_architecture():
-    # O frontend (static/js/architecture_menu.js) espera:
-    # - architecture: lista em cascata com campos {id,label,etapa,submenus}
-    # - implementation_phases: lista de fases
-    from architecture import get_menu_structure
-
-    return jsonify(
-        {
-            "architecture": get_menu_structure(),
-            "implementation_phases": IMPLEMENTATION_PHASES,
-        }
-    )
-
-
-
-
 @app.route("/api/empresas", methods=["GET"])
 def list_empresas():
-
     try:
         empresas = db.listar_empresas()
         return jsonify(empresas)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/api/empresas/<int:id>", methods=["GET"])
 def get_empresa(id):
@@ -167,7 +104,6 @@ def get_empresa(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 @app.route("/api/empresas", methods=["POST"])
 def save_empresa():
     try:
@@ -178,12 +114,11 @@ def save_empresa():
             regime=data.get("regime"),
             atividade=data.get("atividade"),
             faturamento_anual=float(data.get("faturamento_anual", 0)),
-            folha_anual=float(data.get("folha_anual", 0)),
+            folha_anual=float(data.get("folha_anual", 0))
         )
         return jsonify({"success": True, "id": emp_id})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/api/empresas/<int:id>", methods=["DELETE"])
 def delete_empresa(id):
@@ -193,11 +128,9 @@ def delete_empresa(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 # ==========================================
 # REST API: NOTAS FISCAIS
 # ==========================================
-
 
 @app.route("/api/notas", methods=["GET"])
 def list_notas():
@@ -206,15 +139,14 @@ def list_notas():
         mes = request.args.get("mes", type=int)
         ano = request.args.get("ano", type=int)
         tipo = request.args.get("tipo")
-
+        
         if not empresa_id:
             return jsonify({"error": "empresa_id é obrigatório"}), 400
-
+            
         notas = db.listar_notas(empresa_id, mes, ano, tipo)
         return jsonify(notas)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/api/notas/<int:id>", methods=["DELETE"])
 def delete_nota(id):
@@ -223,7 +155,6 @@ def delete_nota(id):
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/api/notas/manual", methods=["POST"])
 def save_nota_manual():
@@ -236,11 +167,9 @@ def save_nota_manual():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 # ==========================================
 # XML UPLOAD API
 # ==========================================
-
 
 @app.route("/api/upload", methods=["POST"])
 def upload_xml():
@@ -249,24 +178,19 @@ def upload_xml():
         empresa_id = data.get("empresa_id")
         filename = data.get("filename")
         xml_content = data.get("xml_content")
-
+        
         if not empresa_id or not xml_content:
             return jsonify({"success": False, "message": "Dados incompletos"}), 400
-
+            
         empresa = db.obter_empresa(empresa_id)
         if not empresa:
             return jsonify({"success": False, "message": "Empresa ativa inválida"}), 400
-
+            
         # Parse XML
         nota_fisc = parse_xml_invoice(xml_content, company_cnpj=empresa["cnpj"])
         if not nota_fisc:
-            return (
-                jsonify(
-                    {"success": False, "message": "Falha ao analisar estrutura do XML"}
-                ),
-                400,
-            )
-
+            return jsonify({"success": False, "message": "Falha ao analisar estrutura do XML"}), 400
+            
         # Inject default outras_retencoes if missing (3.65% of total)
         if nota_fisc.get("outras_retencoes", 0) == 0:
             try:
@@ -274,28 +198,23 @@ def upload_xml():
                 nota_fisc["outras_retencoes"] = round(total * 0.0365, 2)
             except Exception:
                 nota_fisc["outras_retencoes"] = 0
-
+        
         # Inject details
         nota_fisc["empresa_id"] = empresa_id
         nota_fisc["xml_origem"] = filename
-
+        
         # Save to DB
         success = db.salvar_nota(nota_fisc)
         if success:
             return jsonify({"success": True, "nota_numero": nota_fisc["numero"]})
-        return (
-            jsonify({"success": False, "message": "Nota já importada ou duplicada"}),
-            400,
-        )
-
+        return jsonify({"success": False, "message": "Nota já importada ou duplicada"}), 400
+        
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
-
 
 # ==========================================
 # COMPUTATIONS & KPI DASHBOARD
 # ==========================================
-
 
 @app.route("/api/dashboard", methods=["GET"])
 def get_dashboard_summary():
@@ -303,20 +222,20 @@ def get_dashboard_summary():
         empresa_id = request.args.get("empresa_id", type=int)
         mes = request.args.get("mes", type=int)
         ano = request.args.get("ano", type=int)
-
+        
         if not empresa_id or not mes or not ano:
             return jsonify({"error": "Parâmetros incompletos"}), 400
-
+            
         empresa = db.obter_empresa(empresa_id)
         if not empresa:
             return jsonify({"error": "Empresa não encontrada"}), 404
-
+            
         # Totals from invoices ledger
         totais = db.obter_totais_periodo(empresa_id, mes, ano)
-
+        
         # Prejuízo fiscal anterior (opcional - fixado em 0 ou buscando no DB se implementado)
-        prejuizo_fiscal = 0  # Pode ser expandido
-
+        prejuizo_fiscal = 0 # Pode ser expandido
+        
         # Executar motor de cálculo com regime atual da empresa
         resultado = CalculadoraTributaria.calcular(
             regime=empresa["regime"],
@@ -332,82 +251,64 @@ def get_dashboard_summary():
             faturamento_anual=totais["faturamento_anual_acumulado"],
             folha_anual=empresa["folha_anual"],
             activity_type=empresa["atividade"],
-            prejuizo_fiscal=prejuizo_fiscal,
+            prejuizo_fiscal=prejuizo_fiscal
         )
-
+        
         # Gerar Alertas
         alertas = []
         if empresa["regime"] == "simples":
             # Alerta Sublimite R$ 3.6M
             if resultado.excedeu_sublimite:
-                alertas.append(
-                    {
-                        "tipo": "warning",
-                        "titulo": "Sublimite de Faturamento Excedido (R$ 3.6M)",
-                        "descricao": f"O faturamento acumulado de R$ {resultado.faturamento_anual:,.2f} ultrapassou o sublimite. O ISS/ICMS deste período deverá ser recolhido por fora da guia do Simples Nacional pelas regras gerais de débito/crédito normal do município e estado!",
-                    }
-                )
+                alertas.append({
+                    "tipo": "warning",
+                    "titulo": "Sublimite de Faturamento Excedido (R$ 3.6M)",
+                    "descricao": f"O faturamento acumulado de R$ {resultado.faturamento_anual:,.2f} ultrapassou o sublimite. O ISS/ICMS deste período deverá ser recolhido por fora da guia do Simples Nacional pelas regras gerais de débito/crédito normal do município e estado!"
+                })
             # Alerta Limite Geral R$ 4.8M
             if resultado.excedeu_limite:
-                alertas.append(
-                    {
-                        "tipo": "danger",
-                        "titulo": "Limite Geral de Enquadramento Estourado (R$ 4.8M)",
-                        "descricao": f"O faturamento acumulado de R$ {resultado.faturamento_anual:,.2f} excedeu o limite geral nacional. A exclusão do Simples Nacional é obrigatória.",
-                    }
-                )
-
+                alertas.append({
+                    "tipo": "danger",
+                    "titulo": "Limite Geral de Enquadramento Estourado (R$ 4.8M)",
+                    "descricao": f"O faturamento acumulado de R$ {resultado.faturamento_anual:,.2f} excedeu o limite geral nacional. A exclusão do Simples Nacional é obrigatória."
+                })
+        
         if empresa["regime"] in ["presumido", "real"]:
             # Alerta Transição Reforma 2026
-            alertas.append(
-                {
-                    "tipo": "info",
-                    "titulo": "Transição da Reforma Tributária (CBS/IBS)",
-                    "descricao": f"Apuração modelo 2026 em andamento. Foi provisionado CBS (0,9%) e IBS (0,1%) no valor total de R$ {resultado.total_transicao_2026:,.2f}. Estes tributos estão compensados integralmente no abatimento dos débitos mensais de PIS e COFINS (regra de dupla conformidade).",
-                }
-            )
-
+            alertas.append({
+                "tipo": "info",
+                "titulo": "Transição da Reforma Tributária (CBS/IBS)",
+                "descricao": f"Apuração modelo 2026 em andamento. Foi provisionado CBS (0,9%) e IBS (0,1%) no valor total de R$ {resultado.total_transicao_2026:,.2f}. Estes tributos estão compensados integralmente no abatimento dos débitos mensais de PIS e COFINS (regra de dupla conformidade)."
+            })
+            
             # Alerta Adicional IRPJ mensal
             if resultado.base_irpj_apos_compensacao > 20000:
-                alertas.append(
-                    {
-                        "tipo": "info",
-                        "titulo": "Adicional de IRPJ Incidindo no Mês",
-                        "descricao": f"O lucro tributável no mês excedeu R$ 20.000,00. Incidência da alíquota adicional de 10% aplicada sobre a parcela excedente na competência mensal.",
-                    }
-                )
+                alertas.append({
+                    "tipo": "info",
+                    "titulo": "Adicional de IRPJ Incidindo no Mês",
+                    "descricao": f"O lucro tributável no mês excedeu R$ 20.000,00. Incidência da alíquota adicional de 10% aplicada sobre a parcela excedente na competência mensal."
+                })
 
         # Carga tributária efetiva
-        carga_efetiva = (
-            (resultado.total_impostos / totais["receita_bruta"] * 100)
-            if totais["receita_bruta"] > 0
-            else 0
-        )
-
+        carga_efetiva = (resultado.total_impostos / totais["receita_bruta"] * 100) if totais["receita_bruta"] > 0 else 0
+        
         regime_label = ""
-        if empresa["regime"] == "simples":
-            regime_label = "Simples Nacional"
-        elif empresa["regime"] == "presumido":
-            regime_label = "Lucro Presumido"
-        elif empresa["regime"] == "real":
-            regime_label = "Lucro Real"
+        if empresa["regime"] == "simples": regime_label = "Simples Nacional"
+        elif empresa["regime"] == "presumido": regime_label = "Lucro Presumido"
+        elif empresa["regime"] == "real": regime_label = "Lucro Real"
 
-        return jsonify(
-            {
-                "receita_bruta": totais["receita_bruta"],
-                "total_impostos": resultado.total_impostos,
-                "lucro_liquido": resultado.lucro_liquido,
-                "carga_efetiva": carga_efetiva,
-                "regime": regime_label,
-                "regime_tipo": empresa["regime"],
-                "faturamento_anual": totais["faturamento_anual_acumulado"],
-                "alertas": alertas,
-            }
-        )
-
+        return jsonify({
+            "receita_bruta": totais["receita_bruta"],
+            "total_impostos": resultado.total_impostos,
+            "lucro_liquido": resultado.lucro_liquido,
+            "carga_efetiva": carga_efetiva,
+            "regime": regime_label,
+            "regime_tipo": empresa["regime"],
+            "faturamento_anual": totais["faturamento_anual_acumulado"],
+            "alertas": alertas
+        })
+        
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/api/comparativo", methods=["GET"])
 def get_regimes_comparison():
@@ -415,83 +316,58 @@ def get_regimes_comparison():
         empresa_id = request.args.get("empresa_id", type=int)
         mes = request.args.get("mes", type=int)
         ano = request.args.get("ano", type=int)
-
+        
         if not empresa_id or not mes or not ano:
             return jsonify({"error": "Parâmetros incompletos"}), 400
-
+            
         empresa = db.obter_empresa(empresa_id)
         if not empresa:
             return jsonify({"error": "Empresa não encontrada"}), 404
-
+            
         totais = db.obter_totais_periodo(empresa_id, mes, ano)
-
+        
         # Calcular Simples Nacional
         res_simples = CalculadoraTributaria.calcular(
-            regime="simples",
-            mes=mes,
-            ano=ano,
-            receita_bruta=totais["receita_bruta"],
-            custos=totais["custos"],
-            despesas=totais["despesas"],
-            creditos_pis=totais["creditos_pis"],
-            creditos_cofins=totais["creditos_cofins"],
-            icms_saida=totais["icms_saida"],
-            icms_entrada=totais["icms_entrada"],
+            regime="simples", mes=mes, ano=ano,
+            receita_bruta=totais["receita_bruta"], custos=totais["custos"], despesas=totais["despesas"],
+            creditos_pis=totais["creditos_pis"], creditos_cofins=totais["creditos_cofins"],
+            icms_saida=totais["icms_saida"], icms_entrada=totais["icms_entrada"],
             faturamento_anual=totais["faturamento_anual_acumulado"],
-            folha_anual=empresa["folha_anual"],
-            activity_type=empresa["atividade"],
+            folha_anual=empresa["folha_anual"], activity_type=empresa["atividade"]
         )
-
+        
         # Calcular Lucro Presumido
         res_presumido = CalculadoraTributaria.calcular(
-            regime="presumido",
-            mes=mes,
-            ano=ano,
-            receita_bruta=totais["receita_bruta"],
-            custos=totais["custos"],
-            despesas=totais["despesas"],
-            creditos_pis=totais["creditos_pis"],
-            creditos_cofins=totais["creditos_cofins"],
-            icms_saida=totais["icms_saida"],
-            icms_entrada=totais["icms_entrada"],
+            regime="presumido", mes=mes, ano=ano,
+            receita_bruta=totais["receita_bruta"], custos=totais["custos"], despesas=totais["despesas"],
+            creditos_pis=totais["creditos_pis"], creditos_cofins=totais["creditos_cofins"],
+            icms_saida=totais["icms_saida"], icms_entrada=totais["icms_entrada"],
             faturamento_anual=totais["faturamento_anual_acumulado"],
-            folha_anual=empresa["folha_anual"],
-            activity_type=empresa["atividade"],
+            folha_anual=empresa["folha_anual"], activity_type=empresa["atividade"]
         )
-
+        
         # Calcular Lucro Real
         res_real = CalculadoraTributaria.calcular(
-            regime="real",
-            mes=mes,
-            ano=ano,
-            receita_bruta=totais["receita_bruta"],
-            custos=totais["custos"],
-            despesas=totais["despesas"],
-            creditos_pis=totais["creditos_pis"],
-            creditos_cofins=totais["creditos_cofins"],
-            icms_saida=totais["icms_saida"],
-            icms_entrada=totais["icms_entrada"],
+            regime="real", mes=mes, ano=ano,
+            receita_bruta=totais["receita_bruta"], custos=totais["custos"], despesas=totais["despesas"],
+            creditos_pis=totais["creditos_pis"], creditos_cofins=totais["creditos_cofins"],
+            icms_saida=totais["icms_saida"], icms_entrada=totais["icms_entrada"],
             faturamento_anual=totais["faturamento_anual_acumulado"],
-            folha_anual=empresa["folha_anual"],
-            activity_type=empresa["atividade"],
+            folha_anual=empresa["folha_anual"], activity_type=empresa["atividade"]
         )
-
-        return jsonify(
-            {
-                "simples": res_simples.total_impostos,
-                "presumido": res_presumido.total_impostos,
-                "real": res_real.total_impostos,
-            }
-        )
-
+        
+        return jsonify({
+            "simples": res_simples.total_impostos,
+            "presumido": res_presumido.total_impostos,
+            "real": res_real.total_impostos
+        })
+        
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 # ==========================================
 # APURAÇÃO DETAILS: DRE & MEMORIA
 # ==========================================
-
 
 @app.route("/api/apuracao/dre", methods=["GET"])
 def get_dre_html():
@@ -499,16 +375,16 @@ def get_dre_html():
         empresa_id = request.args.get("empresa_id", type=int)
         mes = request.args.get("mes", type=int)
         ano = request.args.get("ano", type=int)
-
+        
         if not empresa_id or not mes or not ano:
             return jsonify({"error": "Parâmetros inválidos"}), 400
-
+            
         empresa = db.obter_empresa(empresa_id)
         if not empresa:
             return jsonify({"error": "Empresa não cadastrada"}), 404
-
+            
         totais = db.obter_totais_periodo(empresa_id, mes, ano)
-
+        
         resultado = CalculadoraTributaria.calcular(
             regime=empresa["regime"],
             mes=mes,
@@ -522,15 +398,14 @@ def get_dre_html():
             icms_entrada=totais["icms_entrada"],
             faturamento_anual=totais["faturamento_anual_acumulado"],
             folha_anual=empresa["folha_anual"],
-            activity_type=empresa["atividade"],
+            activity_type=empresa["atividade"]
         )
-
+        
         html_content = CalculadoraTributaria.gerar_dre_html(resultado)
         return jsonify({"html": html_content})
-
+        
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/api/apuracao/memoria", methods=["GET"])
 def get_memoria_items():
@@ -538,16 +413,16 @@ def get_memoria_items():
         empresa_id = request.args.get("empresa_id", type=int)
         mes = request.args.get("mes", type=int)
         ano = request.args.get("ano", type=int)
-
+        
         if not empresa_id or not mes or not ano:
             return jsonify({"error": "Parâmetros inválidos"}), 400
-
+            
         empresa = db.obter_empresa(empresa_id)
         if not empresa:
             return jsonify({"error": "Empresa não cadastrada"}), 404
-
+            
         totais = db.obter_totais_periodo(empresa_id, mes, ano)
-
+        
         resultado = CalculadoraTributaria.calcular(
             regime=empresa["regime"],
             mes=mes,
@@ -561,60 +436,30 @@ def get_memoria_items():
             icms_entrada=totais["icms_entrada"],
             faturamento_anual=totais["faturamento_anual_acumulado"],
             folha_anual=empresa["folha_anual"],
-            activity_type=empresa["atividade"],
+            activity_type=empresa["atividade"]
         )
-
+        
         # Serialize list of MemoriaCalculoItem to dictionaries
         serialized_memoria = []
         for item in resultado.memoria:
-            serialized_memoria.append(
-                {
-                    "imposto": item.imposto,
-                    "base_calculo": item.base_calculo,
-                    "aliquota": item.aliquota,
-                    "valor_debito": item.valor_debito,
-                    "valor_credito": item.valor_credito,
-                    "valor_total": item.valor_total,
-                    "detalhamento": item.detalhamento,
-                }
-            )
-
+            serialized_memoria.append({
+                "imposto": item.imposto,
+                "base_calculo": item.base_calculo,
+                "aliquota": item.aliquota,
+                "valor_debito": item.valor_debito,
+                "valor_credito": item.valor_credito,
+                "valor_total": item.valor_total,
+                "detalhamento": item.detalhamento
+            })
+            
         return jsonify({"memoria": serialized_memoria})
-
+        
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
-# ==========================================
-# INTEGRAÇÃO ESCRITURA FISCAL
-# ==========================================
-@app.route("/api/escritura/generate", methods=["POST"])
-def generate_escritura():
-    try:
-        data = request.json or {}
-        empresa_id = data.get("empresa_id")
-        mes = data.get("mes")
-        ano = data.get("ano")
-        if not all([empresa_id, mes, ano]):
-            return (
-                jsonify({"error": "Parâmetros obrigatórios: empresa_id, mes, ano"}),
-                400,
-            )
-        empresa = db.obter_empresa(empresa_id)
-        if not empresa:
-            return jsonify({"error": "Empresa não encontrada"}), 404
-
-        entries = gerar_escritura_fiscal(db, empresa_id, int(mes), int(ano))
-        saved = db.salvar_escritura_fiscal(empresa_id, int(mes), int(ano), entries)
-        return jsonify({"success": True, "saved": saved, "entries_count": len(entries)})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
 
 # ==========================================
 # INTEGRAÇÃO SIEG API
 # ==========================================
-
 
 @app.route("/api/sieg/sync", methods=["POST"])
 def sync_sieg():
@@ -634,14 +479,7 @@ def sync_sieg():
         end_date = data.get("end_date")
 
         if not all([empresa_id, start_date, end_date]):
-            return (
-                jsonify(
-                    {
-                        "error": "Parâmetros obrigatórios: empresa_id, start_date, end_date"
-                    }
-                ),
-                400,
-            )
+            return jsonify({"error": "Parâmetros obrigatórios: empresa_id, start_date, end_date"}), 400
 
         empresa = db.obter_empresa(empresa_id)
         if not empresa:
@@ -674,21 +512,17 @@ def sync_sieg():
                 if db.salvar_nota(nota):
                     imported.append(nota.get("numero"))
                 else:
-                    errors.append(
-                        {"id": inv["id"], "erro": "Nota duplicada ou falha ao salvar"}
-                    )
+                    errors.append({"id": inv["id"], "erro": "Nota duplicada ou falha ao salvar"})
             except Exception as inv_err:
                 errors.append({"id": inv.get("id", "?"), "erro": str(inv_err)})
 
-        return jsonify(
-            {
-                "success": True,
-                "imported": imported,
-                "total_fetched": len(invoices),
-                "total_imported": len(imported),
-                "errors": errors,
-            }
-        )
+        return jsonify({
+            "success": True,
+            "imported": imported,
+            "total_fetched": len(invoices),
+            "total_imported": len(imported),
+            "errors": errors
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -697,7 +531,6 @@ def sync_sieg():
 def sieg_status():
     """Verifica se a chave da API Sieg está configurada."""
     from siege_api import SIEG_API_KEY
-
     configured = bool(SIEG_API_KEY)
     return jsonify({"configured": configured})
 

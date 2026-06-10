@@ -14,25 +14,58 @@ from .models import CanonicalFiscalEvent, MemoriaCalculoItem, TaxResult, RuleTra
 class RulesEngineV1:
     @staticmethod
     def calculate(event: CanonicalFiscalEvent, *, mes: int, ano: int) -> CanonicalFiscalEvent:
-        from calculadora import CalculadoraTributaria
+        from motor_fiscal.engine.executor import FiscalExecutor
+        from src.models.fiscal import FiscalMovementItem
+        from src.database.session import get_session
 
-        # Map de atividade atual
-        activity_type = event.operacao.activity_type
-        if not activity_type:
-            activity_type = "servicos"
+        executor = FiscalExecutor()
+        session = get_session()
 
-        # Como o modelo atual só traz "total" e não traz separação de custos/despesas por evento,
-        # chamamos o motor no nível competência (não evento). Por isso, nesta fase o engine
-        # não altera valores de taxes; ele só deixa trace indicando necessidade de agregação.
-        #
-        # Para manter compatibilidade agora, geramos inconsistency indicando que a engine deve operar
-        # na competência (faturamento) e não por nota.
-        event.inconsistencies.append(
-            "RulesEngineV1 (fase 1): cálculo ainda é de competência; evento ainda não calculado granularmente"
-        )
+        if event.nota_id:
+            items = session.query(FiscalMovementItem).filter(FiscalMovementItem.movimento_id == event.nota_id).all()
+            for item in items:
+                resultado = executor.processar_item(item.id)
+                # Map resultado to event.taxes
+                if resultado.valor_icms > 0 or resultado.gera_debito or resultado.gera_credito:
+                    event.taxes.append(TaxResult(
+                        tax="ICMS",
+                        base=float(item.base_icms or 0.0),
+                        rate_percent=0.0,
+                        debit=float(resultado.valor_icms) if resultado.gera_debito else 0.0,
+                        credit=float(resultado.valor_icms) if resultado.gera_credito else 0.0,
+                        total=float(resultado.valor_icms),
+                        trace=RuleTrace(
+                            rule_id="ICMS_BASIC",
+                            rule_version="1.0",
+                            rule_name="ICMS",
+                            description=resultado.motivo
+                        )
+                    ))
+                if resultado.valor_pis > 0:
+                    event.taxes.append(TaxResult(
+                        tax="PIS",
+                        base=float(item.base_pis or 0.0),
+                        rate_percent=0.0,
+                        debit=float(resultado.valor_pis) if resultado.gera_debito else 0.0,
+                        credit=float(resultado.valor_pis) if resultado.gera_credito else 0.0,
+                        total=float(resultado.valor_pis)
+                    ))
+                if resultado.valor_cofins > 0:
+                    event.taxes.append(TaxResult(
+                        tax="COFINS",
+                        base=float(item.base_cofins or 0.0),
+                        rate_percent=0.0,
+                        debit=float(resultado.valor_cofins) if resultado.gera_debito else 0.0,
+                        credit=float(resultado.valor_cofins) if resultado.gera_credito else 0.0,
+                        total=float(resultado.valor_cofins)
+                    ))
+                for alert in resultado.alertas:
+                    if alert not in event.inconsistencies:
+                        event.inconsistencies.append(alert)
+
         event.debug["mes"] = mes
         event.debug["ano"] = ano
-        event.debug["motor"] = "CalculadoraTributaria (a integrar na próxima iteração)"
+        event.debug["motor"] = "FiscalExecutor (unified)"
 
         return event
 

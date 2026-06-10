@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cteProc xmlns="http://www.portalfiscal.inf.br/cte">
+  <CTe>
+    <infCte Id="CTe35240612345678000190570010000001231000001234">
+      <ide>
+        <nCT>202600000041185</nCT>
+        <serie>1</serie>
+        <dhEmi>2024-06-01T08:00:00-03:00</dhEmi>
+        <CFOP>5353</CFOP>
+        <modal>01</modal>
+      </ide>
+      <emit>
+        <CNPJ>12345678000100</CNPJ>
+        <xNome>Transportadora Teste LTDA</xNome>
+      </emit>
+      <dest>
+        <CNPJ>98765432000199</CNPJ>
+        <xNome>Cliente de Teste Ltda</xNome>
+      </dest>
+      <vPrest>
+        <vTPrest>2500.00</vTPrest>
+        <vRec>2500.00</vRec>
+      </vPrest>
+      <imp>
+        <ICMS>
+          <ICMS00>
+            <CST>00</CST>
+            <vBC>2500.00</vBC>
+            <vICMS>300.00</vICMS>
+          </ICMS00>
+        </ICMS>
+      </imp>
+      <xObs>Transporte de mercadorias SP-RJ</xObs>
+    </infCte>
+  </CTe>
+</cteProc>

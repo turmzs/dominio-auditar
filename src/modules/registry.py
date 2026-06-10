@@ -86,8 +86,30 @@ def get_module_meta(module_name):
     return {"name": module_name, "status": "active"}
 
 
+def _register_module_blueprint(app, module_name: str, bp) -> str:
+    """Registra blueprint respeitando url_prefix já definido no módulo."""
+    parts = module_name.split('.')
+    inferred = '/' + (parts[-1] if len(parts) < 3 else '/'.join(parts[1:-1]))
+    existing = (bp.url_prefix or '').strip()
+    if existing:
+        if not existing.startswith('/'):
+            existing = '/' + existing
+        app.register_blueprint(bp)
+        url_base = existing
+    else:
+        app.register_blueprint(bp, url_prefix=inferred)
+        url_base = inferred
+
+    LOADED_MODULES.append({
+        'id': module_name,
+        'name': parts[-1].replace('_', ' ').title(),
+        'url': url_base + '/ping',
+    })
+    return url_base
+
+
 def load_all_routes(app):
-    """Registra automaticamente todos os Blueprints encontrados em src"""
+    """Registra automaticamente todos os Blueprints encontrados em src/ e motor_fiscal/."""
     # 1. Registrar a API de Arquitetura primeiro
     try:
         from src.modules.routes import modules_bp
@@ -96,28 +118,26 @@ def load_all_routes(app):
     except Exception as e:
         print(f'[Registry] Erro ao registrar API: {e}')
 
+    # 2. Varredura de pacotes com blueprints
+    project_root = pathlib.Path(__file__).resolve().parent.parent.parent
+    scan_roots = [
+        (project_root / 'src', 'src'),
+        (project_root / 'motor_fiscal', 'motor_fiscal'),
+    ]
 
-    # 2. Varredura de módulos
-    base_path = pathlib.Path(__file__).resolve().parent.parent
-
-    for loader, module_name, is_pkg in pkgutil.walk_packages([str(base_path)], prefix=base_path.name + '.'):
-        try:
-            mod = importlib.import_module(module_name)
-            bp = getattr(mod, 'bp', None)
-
-            if bp:
-                # Define prefixo da URL
-                parts = module_name.split('.')
-                prefix = '/' + (parts[-1] if len(parts) < 3 else '/'.join(parts[1:-1]))
-
-                app.register_blueprint(bp, url_prefix=prefix)
-                LOADED_MODULES.append({
-                    'id': module_name,
-                    'name': parts[-1].replace('_', ' ').title(),
-                    'url': prefix + '/ping'
-                })
-                print(f'[Registry] Registrado: {module_name}')
-        except Exception as e:
-            print(f'[Registry] Erro no modulo {module_name}: {e}')
+    for base_path, prefix_name in scan_roots:
+        if not base_path.is_dir():
+            continue
+        for loader, module_name, is_pkg in pkgutil.walk_packages(
+            [str(base_path)], prefix=prefix_name + '.'
+        ):
+            try:
+                mod = importlib.import_module(module_name)
+                bp = getattr(mod, 'bp', None)
+                if bp:
+                    _register_module_blueprint(app, module_name, bp)
+                    print(f'[Registry] Registrado: {module_name}')
+            except Exception as e:
+                print(f'[Registry] Erro no modulo {module_name}: {e}')
 
 
