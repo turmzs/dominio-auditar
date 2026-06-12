@@ -1,0 +1,308 @@
+chat atualmente meu projeto está dividido em fases, e está indo para a fase 4, porém por conta de erros dentro do app_new.js, não estou conseguindo avançar para a proxima fase, além de estar com problemas na hora de importar nota
+
+
+# Fase 1 — Fundação (1 a 2 meses)
+
+### 1. Migrar para PostgreSQL
+
+Se ainda estiver usando SQLite.
+
+Objetivo:
+
+* Banco robusto.
+* Multiusuário.
+* Backup.
+* Crescimento futuro.
+
+---
+
+### 2. Estruturar as entidades principais
+
+Crie e estabilize:
+
+```text
+Empresa
+Usuário
+
+Cliente
+Fornecedor
+Produto
+
+Movimento Fiscal
+Item Movimento
+
+NCM
+CFOP
+
+Apuração
+```
+
+Antes de criar mais funcionalidades.
+
+---
+
+### 3. Criar sistema de permissões
+
+Exemplo:
+
+```text
+Fiscal
+Supervisor
+Administrador
+```
+
+Ou granular:
+
+```text
+Importar XML
+Apurar ICMS
+Gerar SPED
+Cadastrar Produtos
+```
+
+---
+
+# Fase 2 — Escrita Fiscal (2 a 4 meses)
+
+### 4. Construir o cadastro de movimentos
+
+A principal entidade do sistema.
+
+Deve aceitar:
+
+```text
+XML
+Digitação manual
+Importação planilha
+API
+```
+
+Tudo vira Movimento Fiscal.
+
+---
+
+### 5. Criar itens do movimento
+
+Cada item precisa armazenar:
+
+```text
+Produto
+NCM
+CFOP
+CST
+CSOSN
+
+ICMS
+PIS
+COFINS
+IPI
+```
+
+individualmente.
+
+Essa etapa é extremamente importante.
+
+---
+
+### 6. Construir o motor fiscal
+
+Criar uma pasta dedicada:
+
+```text
+motor_fiscal/
+
+cfop.py
+cst.py
+csosn.py
+ncm.py
+creditos.py
+monofasicos.py
+```
+
+Toda regra fiscal deve morar aqui.
+
+Nunca na interface.
+
+---
+
+# Fase 3 — Auditoria (1 a 3 meses)
+
+### 7. Criar verificações automáticas
+
+Por exemplo:
+
+```text
+NCM incompatível
+
+CFOP incompatível
+
+CST incorreto
+
+Produto monofásico
+
+Crédito indevido
+
+Diferença de alíquota
+```
+
+Gerar alertas automáticos.
+
+---
+
+### 8. Criar log de auditoria
+
+Guardar:
+
+```text
+Usuário
+Data
+Ação
+Valor antigo
+Valor novo
+```
+
+Isso agrega muito valor.
+
+---
+
+# Fase 4 — Apuração (2 a 4 meses)
+
+### 9. ICMS
+
+Primeiro:
+
+```text
+Débitos
+
+Créditos
+
+Saldo
+```
+
+Depois:
+
+```text
+Estornos
+
+Ajustes
+
+Complementos
+```
+
+---
+
+### 10. PIS e COFINS
+
+Separados do ICMS.
+
+Criar motores independentes.
+
+---
+
+### 11. Simples Nacional
+
+Se seu escritório trabalha com Simples.
+
+Esse costuma ser um dos módulos mais usados.
+
+---
+
+# Fase 5 — Obrigações Acessórias
+
+### 12. Gerar SPED Fiscal
+
+Somente após:
+
+```text
+Movimentos OK
+Apuração OK
+```
+
+---
+
+### 13. Gerar EFD Contribuições
+
+Depois do SPED Fiscal.
+
+---
+
+### 14. Outras obrigações
+
+Dependendo da sua região:
+
+```text
+GIA
+DIME
+Sintegra
+```
+
+---
+
+# Fase 6 — Inteligência Fiscal
+
+### 15. Dashboard
+
+Mostrar:
+
+```text
+Pendências
+
+Notas sem classificação
+
+Erros encontrados
+
+Empresas com problemas
+```
+
+---
+
+### 16. Motor de recuperação tributária
+
+Exemplo:
+
+```text
+Produto monofásico tributado
+
+Crédito perdido
+
+NCM divergente
+```
+
+Isso pode virar um diferencial enorme.
+
+---
+
+# Fase 7 — Produto Comercial
+
+Somente quando tudo acima estiver estável.
+
+### 17. Multiempresa
+
+Tudo separado por:
+
+```text
+empresa_id
+```
+
+---
+
+### 18. SaaS
+
+Hospedagem.
+
+Atualizações automáticas.
+
+Backup automático.
+
+---
+
+### 19. Clientes piloto
+
+Primeiro:
+
+```text
+1 escritório
+↓
+3 escritórios
+↓
+10 escritórios

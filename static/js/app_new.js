@@ -49,11 +49,191 @@ function loadContent(tabName) {
         case 'importacao':
             loadImportacao(contentArea);
             break;
+        case 'empresas':
+            loadEmpresas(contentArea);
+            break;
         default:
             contentArea.innerHTML = `<div class="dashboard-container" style="padding:20px;">Tab '${String(tabName)}' não implementada.</div>`;
             break;
     }
 }
+
+/* ====== Empresas (CRUD UI) ====== */
+function escapeHtml(v) {
+    return String(v ?? '').replace(/[&<>"']/g, (m) => ({
+        '&': '&amp;', '<': '<', '>': '>', '"': '"', "'": '&#39;'
+    }[m]));
+}
+
+function loadEmpresas(contentArea) {
+    contentArea.innerHTML = `
+        <div class="dashboard-container">
+            <div class="section-container" style="max-width:980px; margin:0 auto;">
+                <div class="section-header" style="display:flex; justify-content:space-between; align-items:flex-end; gap:12px;">
+                    <h2 style="margin:0; color:white;">Cadastro de Empresas</h2>
+                    <div class="text-muted" style="font-size:.9rem;">Crie/edite empresas diretamente no SQL</div>
+                </div>
+
+                <div style="margin-top:16px; padding:14px; background:#ffffff; border:1px solid #d0dede; border-radius:10px;">
+                    <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px;">
+                        <div>
+                            <div class="trib-info" style="color:black; margin-bottom:6px;">Razão Social *</div>
+                            <input id="emp_razao_social" style="padding:10px; width:100%; border:1px solid #d0dede; border-radius:8px;" />
+                        </div>
+                        <div>
+                            <div class="trib-info" style="color:black; margin-bottom:6px;">Nome Fantasia</div>
+                            <input id="emp_nome_fantasia" style="padding:10px; width:100%; border:1px solid #d0dede; border-radius:8px;" />
+                        </div>
+
+                        <div>
+                            <div class="trib-info" style="color:black; margin-bottom:6px;">CNPJ *</div>
+                            <input id="emp_cnpj" placeholder="00.000.000/0000-00" style="padding:10px; width:100%; border:1px solid #d0dede; border-radius:8px;" />
+                        </div>
+                        <div>
+                            <div class="trib-info" style="color:black; margin-bottom:6px;">Regime Tributário</div>
+                            <select id="emp_regime_tributario" style="padding:10px; width:100%; border:1px solid #d0dede; border-radius:8px;">
+                                <option value="SIMPLES">SIMPLES</option>
+                                <option value="PRESUMIDO">PRESUMIDO</option>
+                                <option value="REAL">REAL</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <div class="trib-info" style="color:black; margin-bottom:6px;">UF</div>
+                            <input id="emp_uf" style="padding:10px; width:100%; border:1px solid #d0dede; border-radius:8px;" />
+                        </div>
+                        <div>
+                            <div class="trib-info" style="color:black; margin-bottom:6px;">Município</div>
+                            <input id="emp_municipio" style="padding:10px; width:100%; border:1px solid #d0dede; border-radius:8px;" />
+                        </div>
+                    </div>
+
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px; gap:12px;">
+                        <div id="emp_status" style="min-height:18px; font-weight:600; color:#4a6a6a;"></div>
+                        <button id="emp_salvar_btn" class="btn-primary" style="padding:11px 14px; border:none; border-radius:8px; cursor:pointer; background:#1a7171; color:#fff; font-weight:700;">
+                            Salvar Empresa
+                        </button>
+                    </div>
+                </div>
+
+                <div style="margin-top:16px; background:#fff; border:1px solid #d0dede; border-radius:10px; padding:14px;">
+                    <div style="font-weight:800; color:#1a7171; margin-bottom:10px;">Empresas cadastradas</div>
+                    <div class="table-responsive">
+                        <table class="data-table" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Razão Social</th>
+                                    <th>CNPJ</th>
+                                    <th>Regime</th>
+                                    <th>UF</th>
+                                </tr>
+                            </thead>
+                            <tbody id="emp_lista_body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    `;
+
+    (async function initEmp() {
+        const statusEl = document.getElementById('emp_status');
+        const btn = document.getElementById('emp_salvar_btn');
+        const body = document.getElementById('emp_lista_body');
+
+        const loadList = async () => {
+            if (!body) return;
+            statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Carregando...';
+            try {
+                // endpoint correto: blueprint url_prefix=/empresas e rota=/api/empresas
+                const res = await fetch('/empresas/api/empresas');
+                const data = await res.json();
+                const list = Array.isArray(data) ? data : (data?.empresas || []);
+
+                body.innerHTML = '';
+                if (!list.length) {
+                    body.innerHTML = `<tr><td colspan="5">Nenhuma empresa cadastrada.</td></tr>`;
+                    statusEl.textContent = '';
+                    return;
+                }
+
+                list.forEach(emp => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${emp.id}</td>
+                        <td>${escapeHtml(emp.nome || emp.razao_social || '')}</td>
+                        <td>${escapeHtml(emp.cnpj || '')}</td>
+                        <td>${escapeHtml(emp.regime_tributario || '')}</td>
+                        <td>${escapeHtml(emp.uf || '')}</td>
+                    `;
+                    body.appendChild(tr);
+                });
+                statusEl.textContent = '';
+            } catch (e) {
+                statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Erro: ${escapeHtml(e.message || String(e))}`;
+            }
+        };
+
+        if (btn) {
+            btn.addEventListener('click', async () => {
+                const razao_social = document.getElementById('emp_razao_social')?.value?.trim();
+                const nome_fantasia = document.getElementById('emp_nome_fantasia')?.value?.trim();
+                const cnpj = document.getElementById('emp_cnpj')?.value?.trim();
+                const regime_tributario = document.getElementById('emp_regime_tributario')?.value;
+                const uf = document.getElementById('emp_uf')?.value?.trim();
+                const municipio = document.getElementById('emp_municipio')?.value?.trim();
+
+                if (!razao_social) {
+                    statusEl.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Informe Razão Social.';
+                    return;
+                }
+                if (!cnpj) {
+                    statusEl.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Informe CNPJ.';
+                    return;
+                }
+
+                btn.disabled = true;
+                statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
+
+                try {
+                    const res = await fetch('/empresas/api/empresas', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            razao_social,
+                            nome_fantasia,
+                            cnpj,
+                            regime_tributario,
+                            uf,
+                            municipio
+                        })
+                    });
+
+                    const payload = await res.json();
+                    if (!res.ok || payload.status !== 'sucesso') {
+                        throw new Error(payload.message || 'Falha ao salvar empresa');
+                    }
+
+                    statusEl.innerHTML = `<i class="fa-solid fa-check-circle"></i> Empresa salva (id=${payload.id}).`;
+                    await loadList();
+                } catch (e) {
+                    statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Erro: ${escapeHtml(e.message || String(e))}`;
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        }
+
+        await loadList();
+    })();
+}
+
+// export global (caso necessário)
+window.loadEmpresas = loadEmpresas;
+
+
 
 function loadDashboard(contentArea) {
     contentArea.innerHTML = `
@@ -141,9 +321,10 @@ function loadApuracaoFase4(contentArea) {
 
         try {
             statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Carregando empresas...';
-            const res = await fetch('/api/empresas');
+            const res = await fetch('/empresas/api/empresas');
             const data = await res.json();
             const list = Array.isArray(data) ? data : (data?.empresas || []);
+
 
             selectEl.innerHTML = '';
             list.forEach(emp => {
@@ -183,7 +364,14 @@ function loadApuracaoFase4(contentArea) {
                     });
                     const payload = await resCalc.json();
                     if (!resCalc.ok || payload.status !== 'sucesso') {
-                        throw new Error(payload.message || 'Falha ao calcular apuração');
+                        console.error('Apuração CALCULAR erro payload:', payload);
+                        const extra = [
+                            payload?.debug_database_url ? `db:${payload.debug_database_url}` : null,
+                            payload?.debug_database_file_exists === false ? 'db_file_not_found' : null,
+                            typeof payload?.debug_database_file_size_bytes === 'number' ? `db_size:${payload.debug_database_file_size_bytes}` : null,
+                            payload?.debug_sqlite_master_tables_all ? `tables_all:${payload.debug_sqlite_master_tables_all.slice(0, 25)}` : null
+                        ].filter(Boolean).join(' | ');
+                        throw new Error((payload.message || 'Falha ao calcular apuração') + (extra ? ` (${extra})` : ''));
                     }
 
                     const resumoRes = await fetch(`/apuracao/resumo?empresa_id=${empresa_id}&mes=${mes}&ano=${ano}&imposto=${encodeURIComponent(imposto)}`);
